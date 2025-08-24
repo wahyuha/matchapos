@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matchaboy POS - The Best Matcha Here</title>
+    <meta name="theme-color" content="#4A7C59">
+    <link rel="manifest" href="manifest.webmanifest">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #F0F7F4 0%, #A7D7C5 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand h1 {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .brand-info {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .printer-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .connect-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .connect-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+            height: calc(100vh - 80px);
+        }
+
+        /* Left Panel - New Order (65%) */
+        .order-panel {
+            flex: 0 0 55%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .panel-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .panel-header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .products-section {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .product-card {
+            background: #F0F7F4;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:hover {
+            border-color: #7FB069;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(74, 124, 89, 0.2);
+        }
+
+        .product-card.selected {
+            border-color: #4A7C59;
+            background: #A7D7C5;
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #7FB069, #A7D7C5);
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .product-name {
+            font-weight: bold;
+            color: #2D5016;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            color: #D4A574;
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .qty-btn {
+            background: #4A7C59;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .qty-btn:hover {
+            background: #7FB069;
+            transform: scale(1.1);
+        }
+
+        .qty-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .qty-display {
+            font-weight: bold;
+            min-width: 25px;
+            text-align: center;
+            font-size: 1rem;
+            color: #2D5016;
+        }
+
+        .order-summary {
+            background: #F0F7F4;
+            border-top: 3px solid #7FB069;
+            padding: 20px;
+        }
+
+        .order-title {
+            font-size: 1.2rem;
+            color: #2D5016;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .order-items {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #A7D7C5;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: bold;
+            color: #2D5016;
+            font-size: 0.9rem;
+        }
+
+        .item-price {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .item-total {
+            font-weight: bold;
+            color: #D4A574;
+            font-size: 0.9rem;
+        }
+
+        .order-total {
+            background: #4A7C59;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .customer-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #A7D7C5;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .customer-input:focus {
+            outline: none;
+            border-color: #4A7C59;
+        }
+
+        .payment-section {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #A7D7C5;
+        }
+
+        .payment-title {
+            font-weight: bold;
+            color: #2D5016;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .denomination-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .denom-btn {
+            background: #F0F7F4;
+            border: 2px solid #A7D7C5;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #2D5016;
+            transition: all 0.3s ease;
+        }
+
+        .denom-btn:hover, .denom-btn.suggested {
+            background: #7FB069;
+            color: white;
+            border-color: #4A7C59;
+        }
+
+        .payment-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #A7D7C5;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .change-display {
+            background: #D4A574;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .change-display.insufficient {
+            background: #dc3545;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #5a6268;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            color: white;
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 124, 89, 0.3);
+        }
+
+        .btn:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Right Panel - Order Queue (wider) */
+        .queue-panel {
+            flex: 0 0 75%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .queue-header {
+            background: linear-gradient(135deg, #D4A574, #7FB069);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .queue-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .queue-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .queue-item {
+            background: #F0F7F4;
+            border-left: 4px solid #A7D7C5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .queue-item.new {
+            border-left-color: #ffc107;
+        }
+
+        .queue-item.in-progress {
+            border-left-color: #007bff;
+        }
+
+        .queue-item.ready {
+            border-left-color: #28a745;
+        }
+
+        .queue-item.completed {
+            border-left-color: #6c757d;
+            opacity: 0.7;
+        }
+
+        .queue-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            color: #2D5016;
+        }
+
+        .order-time {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .customer-name {
+            font-size: 0.9rem;
+            color: #4A7C59;
+            margin-bottom: 8px;
+        }
+
+        .queue-items {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .queue-total {
+            font-weight: bold;
+            color: #D4A574;
+            margin-bottom: 10px;
+        }
+
+        .status-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-btn.new {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-btn.in-progress {
+            background: #007bff;
+            color: white;
+        }
+
+        .status-btn.ready {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-btn.completed {
+            background: #6c757d;
+            color: white;
+        }
+
+        .empty-queue {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        .empty-order {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .order-panel, .queue-panel {
+                flex: none;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .main-container {
+                padding: 10px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .denomination-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* App additions */
+        .hidden { display: none !important; }
+        .app-toolbar {
+            max-width: 1400px;
+            margin: 10px auto 0;
+            padding: 0 20px 10px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .primary-action {
+            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            color: #fff;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(74,124,89,.25);
+        }
+        .summary-panel {
+            flex: 0 0 45%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 20px;
+            border-left: 4px solid #7FB069;
+        }
+        .customer-toggle { margin-top: 8px; text-align: center; }
+        .customer-toggle button { background: transparent; color: #2D5016; border: none; text-decoration: underline; cursor: pointer; font-weight: 600; }
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+        .tab-btn {
+            padding: 8px 12px;
+            border: 2px solid #A7D7C5;
+            background: #F0F7F4;
+            color: #2D5016;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #7FB069;
+            color: #fff;
+            border-color: #4A7C59;
+        }
+        .finish-btn {
+            background: #28a745;
+            color: #fff;
+        }
+        .cancel-btn { background: #dc3545; color: #fff; }
+        /* Subtle variant for queue items */
+        .cancel-btn.subtle {
+            background: transparent;
+            color: #dc3545;
+            border: 2px dashed #f5c2c7;
+            opacity: 0.7;
+        }
+        .cancel-btn.subtle:hover { opacity: 1; background: #fff0f1; }
+        .confirm-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .confirm-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,.2);
+        }
+        .confirm-actions { display:flex; gap:10px; margin-top: 15px; }
+        .confirm-yes { flex:1; background:#28a745; color:#fff; font-weight:800; padding:10px; border:none; border-radius:8px; }
+        .confirm-no { flex:1; background:#e9ecef; color:#2D5016; padding:10px; border:none; border-radius:8px; }
+
+        /* Big action side panel */
+        .big-action-panel {
+            flex: 0 0 25%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .big-primary {
+            width: 100%;
+            height: 70%;
+            font-size: 2rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            color: #fff;
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 12px 28px rgba(74,124,89,.35);
+            cursor: pointer;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div>
+                    <h1>🍃 Matchaboy - Wanayasa</h1>
+                    <div class="brand-info">
+                        Jl. Wanayasa, Purwakarta, Jawa Barat | @matchaboy<br>
+                        "The best Matcha here"
+                    </div>
+                </div>
+            </div>
+            <div class="printer-status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="printerStatus">Disconnected</span>
+                <button class="connect-btn" id="connectBtn" onclick="connectToPrinter()">
+                    Connect
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar (hidden; replaced by big side button in main screen) -->
+    <div class="app-toolbar hidden" id="toolbar">
+        <button id="addOrderBtn" class="primary-action" onclick="showOrderForm()">+ Add New Order</button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container" id="mainContainer">
+        <!-- Left Panel - New Order -->
+        <div class="order-panel" id="orderPanel">
+            <div class="panel-header">
+                <h2>New Order</h2>
+                <p>Select matcha drinks for your customer</p>
+            </div>
+
+            <div class="products-section">
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Order Summary (Form Mode) / Order Queue (Main Mode) -->
+        <div class="summary-panel hidden" id="summaryPanel">
+            <h3 class="order-title">Order Summary</h3>
+            <div class="order-items" id="orderItems">
+                <div class="empty-order">No items selected</div>
+            </div>
+            <div class="order-total" id="orderTotal">Total: Rp0</div>
+            <div class="payment-section">
+                <div class="payment-title">Payment Amount</div>
+                <div class="denomination-buttons" id="denominationButtons"></div>
+                <input type="number" class="payment-input" id="paymentInput" placeholder="Custom amount">
+                <div class="change-display" id="changeDisplay" style="display: none;">Change: Rp0</div>
+            </div>
+            <div class="customer-toggle">
+                <button type="button" onclick="toggleCustomer()" id="customerToggleBtn">Add customer name</button>
+            </div>
+            <div id="customerSection" class="hidden">
+                <input type="text" class="customer-input" id="customerName" placeholder="Customer name (optional)">
+            </div>
+            <div class="action-buttons">
+                <button class="btn cancel-btn" onclick="cancelOrder()">Cancel</button>
+                <button class="btn btn-clear" onclick="clearOrder()">Clear</button>
+                <button class="btn btn-print" id="printBtn" onclick="processOrder()" disabled>Complete Order</button>
+            </div>
+        </div>
+
+        <div class="big-action-panel hidden" id="bigActionPanel">
+            <button class="big-primary" onclick="showOrderForm()">+ Add New Order</button>
+        </div>
+
+        <div class="queue-panel" id="queuePanel">
+            <div class="queue-header">
+                <h2>Order Queue</h2>
+                <div class="tabs">
+                    <button class="tab-btn active" id="tab-in_progress" onclick="setQueueTab('in_progress')">In Progress</button>
+                    <button class="tab-btn" id="tab-completed" onclick="setQueueTab('completed')">Completed</button>
+                    <button class="tab-btn" id="tab-cancelled" onclick="setQueueTab('cancelled')">Cancelled</button>
+                </div>
+                <div class="queue-stats">
+                    <div class="stat">
+                        <div class="stat-number" id="inProgressOrders">0</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="readyOrders">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="cancelledOrders">0</div>
+                        <div class="stat-label">Cancelled</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="queue-content" id="queueContent">
+                <div class="empty-queue">No orders in queue</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Store and product information
+        const STORE_INFO = {
+            name: "Matchaboy - Wanayasa",
+            address: "Jl. Wanayasa, Purwakarta, Jawa Barat",
+            instagram: "@matchaboy",
+            tagline: "The best Matcha here"
+        };
+
+        const PRODUCTS = {
+            "matcha_latte": { name: "Matcha Latte", price: 13000, emoji: "☕" },
+            "cloud_matcha": { name: "Cloud Matcha", price: 15000, emoji: "☁️" },
+            "matcha_cookies": { name: "Matcha Cookies", price: 15000, emoji: "🍪" },
+            "coconut_matcha": { name: "Coconut Matcha", price: 15000, emoji: "🥥" },
+            "honey_matcha": { name: "Honey Matcha", price: 13000, emoji: "🍯" },
+            "strawberry_cream_matcha": { name: "Strawberry Cream Matcha", price: 15000, emoji: "🍓" },
+            "caramel_matcha": { name: "Caramel Matcha", price: 15000, emoji: "🍮" },
+            "ubi_cream_matcha": { name: "Ubi Cream Matcha Latte", price: 15000, emoji: "🍠" },
+            "choco_cream_matcha": { name: "Choco Cream Matcha", price: 15000, emoji: "🍫" }
+        };
+
+        const DENOMINATIONS = [15000, 20000, 25000, 50000, 100000];
+
+        // Global state
+        let bluetoothDevice = null;
+        let bluetoothCharacteristic = null;
+        let isConnected = false;
+        let currentOrder = {};
+        let orderQueue = [];
+        let orderCounter = 1;
+        let paymentAmount = 0;
+
+        // Utility functions
+        function formatRupiah(amount) {
+            return `Rp${amount.toLocaleString('id-ID')}`;
+        }
+
+        function generateOrderId() {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+            return `${dateStr}_${String(orderCounter++).padStart(3, '0')}`;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('matchaboy_orders', JSON.stringify({
+                currentOrder,
+                orderQueue,
+                orderCounter
+            }));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('matchaboy_orders');
+            if (saved) {
+                const data = JSON.parse(saved);
+                currentOrder = data.currentOrder || {};
+                orderQueue = data.orderQueue || [];
+                orderCounter = data.orderCounter || 1;
+            }
+        }
+
+        // Notification system
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${isError ? 'error' : ''} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Printer functions
+        function updatePrinterStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('printerStatus');
+            const connectBtn = document.getElementById('connectBtn');
+
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected';
+                connectBtn.textContent = 'Disconnect';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                connectBtn.textContent = 'Connect';
+            }
+            isConnected = connected;
+        }
+
+        async function connectToPrinter() {
+            if (isConnected) {
+                if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+                    await bluetoothDevice.gatt.disconnect();
+                }
+                bluetoothDevice = null;
+                bluetoothCharacteristic = null;
+                updatePrinterStatus(false);
+                showNotification('Printer disconnected');
+                return;
+            }
+
+            try {
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [
+                        { namePrefix: 'RPP' },
+                        { namePrefix: 'Printer' },
+                        { namePrefix: 'POS' },
+                        { namePrefix: 'Thermal' }
+                    ],
+                    optionalServices: [
+                        '12345678-1234-1234-1234-123456789abc',
+                        '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                        'generic_access',
+                        'generic_attribute'
+                    ]
+                });
+
+                const server = await bluetoothDevice.gatt.connect();
+                const services = await server.getPrimaryServices();
+                
+                for (const service of services) {
+                    const characteristics = await service.getCharacteristics();
+                    
+                    for (const characteristic of characteristics) {
+                        if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+                            bluetoothCharacteristic = characteristic;
+                            break;
+                        }
+                    }
+                    
+                    if (bluetoothCharacteristic) break;
+                }
+
+                if (!bluetoothCharacteristic) {
+                    throw new Error('No writable characteristic found');
+                }
+
+                bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                    updatePrinterStatus(false);
+                    showNotification('Printer disconnected', true);
+                });
+
+                updatePrinterStatus(true);
+                showNotification('Printer connected successfully!');
+
+            } catch (error) {
+                console.error('Printer connection error:', error);
+                showNotification(`Connection failed: ${error.message}`, true);
+                updatePrinterStatus(false);
+            }
+        }
+
+        async function sendToPrinter(data) {
+            if (!isConnected || !bluetoothCharacteristic) {
+                throw new Error('Printer not connected');
+            }
+
+            try {
+                const chunkSize = 20;
+                for (let i = 0; i < data.length; i += chunkSize) {
+                    const chunk = data.slice(i, i + chunkSize);
+                    await bluetoothCharacteristic.writeValue(chunk);
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                return true;
+            } catch (error) {
+                console.error('Error sending to printer:', error);
+                throw error;
+            }
+        }
+
+        // Product and order management
+        function initializeProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            Object.entries(PRODUCTS).forEach(([id, product]) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">${formatRupiah(product.price)}</div>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="updateQuantity('${id}', -1)">−</button>
+                        <span class="qty-display" id="qty-${id}">0</span>
+                        <button class="qty-btn" onclick="updateQuantity('${id}', 1)">+</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateQuantity(productId, change) {
+            if (!currentOrder[productId]) {
+                currentOrder[productId] = 0;
+            }
+            
+            currentOrder[productId] += change;
+            
+            if (currentOrder[productId] <= 0) {
+                delete currentOrder[productId];
+            }
+
+            document.getElementById(`qty-${productId}`).textContent = currentOrder[productId] || 0;
+            
+            // Update card appearance
+            const card = document.querySelector(`#qty-${productId}`).closest('.product-card');
+            if (currentOrder[productId] > 0) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+
+            updateOrderSummary();
+            saveToLocalStorage();
+        }
+
+        function updateOrderSummary() {
+            const orderItems = document.getElementById('orderItems');
+            const orderTotal = document.getElementById('orderTotal');
+            const printBtn = document.getElementById('printBtn');
+
+            if (Object.keys(currentOrder).length === 0) {
+                orderItems.innerHTML = '<div class="empty-order">No items selected</div>';
+                orderTotal.textContent = 'Total: Rp0';
+                printBtn.disabled = true;
+                updatePaymentSection(0);
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            Object.entries(currentOrder).forEach(([productId, qty]) => {
+                const product = PRODUCTS[productId];
+                const itemTotal = product.price * qty;
+                total += itemTotal;
+
+                html += `
+                    <div class="order-item">
+                        <div class="item-details">
+                            <div class="item-name">${product.name} x${qty}</div>
+                            <div class="item-price">${formatRupiah(product.price)} each</div>
+                        </div>
+                        <div class="item-total">${formatRupiah(itemTotal)}</div>
+                    </div>
+                `;
+            });
+
+            orderItems.innerHTML = html;
+            orderTotal.textContent = `Total: ${formatRupiah(total)}`;
+            printBtn.disabled = false;
+            updatePaymentSection(total);
+        }
+
+        function updatePaymentSection(orderTotal) {
+            const denominationButtons = document.getElementById('denominationButtons');
+            const paymentInput = document.getElementById('paymentInput');
+            const changeDisplay = document.getElementById('changeDisplay');
+
+            // Build/refresh denomination buttons with smart suggestion
+            denominationButtons.innerHTML = '';
+            for (const denom of DENOMINATIONS) {
+                const btn = document.createElement('button');
+                btn.className = 'denom-btn';
+                btn.textContent = formatRupiah(denom);
+                btn.addEventListener('click', () => {
+                    paymentAmount = denom;
+                    paymentInput.value = denom;
+                    refreshChange(orderTotal);
+                });
+                denominationButtons.appendChild(btn);
+            }
+
+            // Bind input handler
+            paymentInput.oninput = () => {
+                const val = parseInt(paymentInput.value, 10);
+                paymentAmount = isNaN(val) ? 0 : val;
+                refreshChange(orderTotal);
+            };
+
+            // Calculate and display change
+            function refreshChange(total) {
+                const diff = paymentAmount - total;
+                if (total <= 0) {
+                    changeDisplay.style.display = 'none';
+                    document.getElementById('printBtn').disabled = true;
+                    return;
+                }
+                changeDisplay.style.display = 'block';
+                if (diff < 0) {
+                    changeDisplay.classList.add('insufficient');
+                    changeDisplay.textContent = `Insufficient: ${formatRupiah(Math.abs(diff))}`;
+                } else {
+                    changeDisplay.classList.remove('insufficient');
+                    changeDisplay.textContent = `Change: ${formatRupiah(diff)}`;
+                }
+                document.getElementById('printBtn').disabled = diff < 0 || Object.keys(currentOrder).length === 0;
+            }
+
+            // Initialize current display
+            refreshChange(orderTotal);
+        }
+
+        function calculateCurrentTotal() {
+            return Object.entries(currentOrder).reduce((sum, [productId, qty]) => {
+                const p = PRODUCTS[productId];
+                return sum + (p ? p.price * qty : 0);
+            }, 0);
+        }
+
+        function clearOrder() {
+            currentOrder = {};
+            paymentAmount = 0;
+            document.getElementById('paymentInput').value = '';
+            // Reset qty display and card selection
+            Object.keys(PRODUCTS).forEach(id => {
+                const qtyEl = document.getElementById(`qty-${id}`);
+                if (qtyEl) qtyEl.textContent = '0';
+                const card = qtyEl ? qtyEl.closest('.product-card') : null;
+                if (card) card.classList.remove('selected');
+            });
+            updateOrderSummary();
+            saveToLocalStorage();
+            showNotification('Order cleared');
+        }
+
+        function buildReceiptText(order) {
+            // Simple ESC/POS-like text (no binary commands for compatibility)
+            const lines = [];
+            lines.push('*** MATCHABOY ***');
+            lines.push(STORE_INFO.name);
+            lines.push(STORE_INFO.address);
+            lines.push(STORE_INFO.instagram);
+            lines.push('--------------------------------');
+            lines.push(`Order: ${order.id}`);
+            lines.push(new Date(order.timestamp).toLocaleString());
+            if (order.customerName) lines.push(`Customer: ${order.customerName}`);
+            lines.push('--------------------------------');
+            order.items.forEach(it => {
+                const left = `${it.productName} x${it.quantity}`;
+                const right = formatRupiah(it.price * it.quantity);
+                lines.push(`${left}`);
+                lines.push(`  @ ${formatRupiah(it.price)}  ${right}`);
+            });
+            lines.push('--------------------------------');
+            lines.push(`TOTAL     : ${formatRupiah(order.total)}`);
+            lines.push(`PAID      : ${formatRupiah(order.payment.amount)}`);
+            lines.push(`CHANGE    : ${formatRupiah(order.payment.change)}`);
+            lines.push('--------------------------------');
+            lines.push('Thank you!');
+            lines.push('The best Matcha here');
+            lines.push('\n\n\n');
+            return lines.join('\n');
+        }
+
+        async function printReceipt(order) {
+            const text = buildReceiptText(order);
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            try {
+                await sendToPrinter(data);
+                showNotification('Receipt sent to printer');
+                // On success: set status to In Progress and go back to queue
+                updateOrderStatus(order.id, 'in_progress');
+                showQueue();
+            } catch (e) {
+                showNotification('Print failed (order still saved)', true);
+            }
+        }
+
+        function processOrder() {
+            // Validation
+            const total = calculateCurrentTotal();
+            if (total <= 0) {
+                showNotification('No items in order', true);
+                return;
+            }
+            if (paymentAmount < total) {
+                showNotification('Payment insufficient', true);
+                return;
+            }
+
+            // Build order object as per PRD
+            const id = generateOrderId();
+            const customerName = document.getElementById('customerName').value.trim();
+            const items = Object.entries(currentOrder).map(([productId, qty]) => ({
+                productId,
+                productName: PRODUCTS[productId].name,
+                price: PRODUCTS[productId].price,
+                quantity: qty
+            }));
+            const order = {
+                id,
+                timestamp: new Date().toISOString(),
+                customerName: customerName || '',
+                items,
+                subtotal: total,
+                tax: 0,
+                total,
+                payment: {
+                    amount: paymentAmount,
+                    change: paymentAmount - total
+                },
+                status: 'new',
+                notes: ''
+            };
+
+            orderQueue.unshift(order);
+            saveToLocalStorage();
+            renderQueue();
+
+            // Attempt printing but do not block
+            printReceipt(order);
+
+            // Reset UI for next customer
+            clearOrder();
+            document.getElementById('customerName').value = '';
+            showNotification('Order created');
+        }
+
+        function renderQueue() {
+            const container = document.getElementById('queueContent');
+            container.innerHTML = '';
+
+            const filtered = orderQueue.filter(o => o.status === selectedQueueTab);
+            if (!filtered.length) {
+                container.innerHTML = '<div class="empty-queue">No orders in queue</div>';
+            } else {
+                filtered.forEach(order => {
+                    const div = document.createElement('div');
+                    div.className = `queue-item ${order.status}`;
+                    const itemsPreview = order.items.map(i => `${i.productName} x${i.quantity}`).join(', ');
+                    div.innerHTML = `
+                        <div class="queue-header-info">
+                            <div class="order-id">#${order.id}</div>
+                            <div class="order-time">${new Date(order.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                        <div class="customer-name">${order.customerName || '—'}</div>
+                        <div class="queue-items">${itemsPreview}</div>
+                        <div class="queue-total">${formatRupiah(order.total)}</div>
+                        ${selectedQueueTab === 'in_progress' ? `
+                        <div class="status-buttons">
+                            <button class="btn finish-btn" onclick="confirmFinish('${order.id}')">Finish</button>
+                            <button class="btn cancel-btn subtle" onclick="confirmCancel('${order.id}')">Cancel</button>
+                        </div>` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            // Update stats
+            document.getElementById('inProgressOrders').textContent = orderQueue.filter(o => o.status === 'in_progress').length;
+            document.getElementById('readyOrders').textContent = orderQueue.filter(o => o.status === 'completed').length;
+            document.getElementById('cancelledOrders').textContent = orderQueue.filter(o => o.status === 'cancelled').length;
+        }
+
+        function updateOrderStatus(orderId, status) {
+            const idx = orderQueue.findIndex(o => o.id === orderId);
+            if (idx !== -1) {
+                orderQueue[idx].status = status;
+                saveToLocalStorage();
+                renderQueue();
+            }
+        }
+
+        // UI state management
+        let uiMode = 'queue'; // 'queue' | 'order'
+        let selectedQueueTab = 'in_progress';
+
+        function setQueueTab(tab) {
+            selectedQueueTab = tab;
+            document.getElementById('tab-in_progress').classList.toggle('active', tab === 'in_progress');
+            document.getElementById('tab-completed').classList.toggle('active', tab === 'completed');
+            document.getElementById('tab-cancelled').classList.toggle('active', tab === 'cancelled');
+            renderQueue();
+        }
+
+        function showQueue() {
+            uiMode = 'queue';
+            document.getElementById('orderPanel').classList.add('hidden');
+            document.getElementById('summaryPanel').classList.add('hidden');
+            document.getElementById('queuePanel').classList.remove('hidden');
+            const toolbar = document.getElementById('toolbar');
+            if (toolbar) toolbar.classList.add('hidden');
+            const big = document.getElementById('bigActionPanel');
+            if (big) big.classList.remove('hidden');
+        }
+
+        function showOrderForm() {
+            uiMode = 'order';
+            document.getElementById('orderPanel').classList.remove('hidden');
+            document.getElementById('summaryPanel').classList.remove('hidden');
+            document.getElementById('queuePanel').classList.add('hidden');
+            const toolbar = document.getElementById('toolbar');
+            if (toolbar) toolbar.classList.add('hidden');
+            const big = document.getElementById('bigActionPanel');
+            if (big) big.classList.add('hidden');
+            // Ensure payment amount not preselected
+            paymentAmount = 0;
+            document.getElementById('paymentInput').value = '';
+            // Reset customer section collapsed
+            const cs = document.getElementById('customerSection');
+            const ct = document.getElementById('customerToggleBtn');
+            if (cs) cs.classList.add('hidden');
+            if (ct) ct.textContent = 'Add customer name';
+            updatePaymentSection(calculateCurrentTotal());
+        }
+
+        function confirmFinish(orderId) {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'flex';
+            const yes = document.getElementById('confirmYes');
+            const no = document.getElementById('confirmNo');
+            const cleanup = () => {
+                yes.onclick = null; no.onclick = null; modal.style.display = 'none';
+            };
+            yes.onclick = () => { updateOrderStatus(orderId, 'completed'); cleanup(); };
+            no.onclick = () => { cleanup(); };
+        }
+
+        function restoreProductSelections() {
+            Object.entries(currentOrder).forEach(([productId, qty]) => {
+                const qtyEl = document.getElementById(`qty-${productId}`);
+                if (qtyEl) {
+                    qtyEl.textContent = qty;
+                    const card = qtyEl.closest('.product-card');
+                    if (card) card.classList.add('selected');
+                }
+            });
+        }
+
+        function toggleCustomer() {
+            const section = document.getElementById('customerSection');
+            const btn = document.getElementById('customerToggleBtn');
+            const nowHidden = section.classList.toggle('hidden');
+            btn.textContent = nowHidden ? 'Add customer name' : 'Hide customer name';
+            if (nowHidden) {
+                const input = document.getElementById('customerName');
+                if (input) input.value = '';
+            }
+        }
+
+        function cancelOrder() {
+            // Discard current draft and return to queue view
+            clearOrder();
+            showQueue();
+            showNotification('Order cancelled');
+        }
+
+        function confirmCancel(orderId) {
+            // Two-step confirmation using native prompts for simplicity and clarity
+            const first = window.confirm('Cancel this order?');
+            if (!first) return;
+            const second = window.confirm('Are you sure? This action cannot be undone.');
+            if (!second) return;
+            updateOrderStatus(orderId, 'cancelled');
+            showNotification('Order cancelled');
+        }
+
+        function init() {
+            loadFromLocalStorage();
+            initializeProducts();
+            restoreProductSelections();
+            updateOrderSummary();
+            renderQueue();
+            showQueue();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Register Service Worker for PWA offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(console.error);
+            });
+        }
+    </script>
+
+    <!-- Confirm Finish Modal -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-content">
+            <div>Mark this order as Completed?</div>
+            <div class="confirm-actions">
+                <button id="confirmYes" class="confirm-yes">Yes</button>
+                <button id="confirmNo" class="confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+
+    </body>
+    </html>
