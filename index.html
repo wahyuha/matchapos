@@ -6,7 +6,36 @@
     <title>Matchaboy POS - The Best Matcha is Here</title>
     <meta name="theme-color" content="#4A7C59">
     <link rel="manifest" href="manifest.webmanifest">
+    <!-- Modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Matcha-safe modern palette */
+            --matcha-900: #1F3D2B;
+            --matcha-800: #2D5016; /* deep leaf */
+            --matcha-700: #3E6B43;
+            --matcha-600: #4A7C59; /* primary */
+            --matcha-500: #6EA67F;
+            --matcha-400: #7FB069; /* accent */
+            --matcha-300: #A7D7C5; /* soft tint */
+            --matcha-200: #D9EEE6; /* surface tint */
+            --matcha-100: #F3FBF8; /* background */
+
+            --sand-500: #D4A574; /* secondary accent */
+            --ink-700: #2C2C2C;
+            --ink-500: #6B7280;
+            --ink-300: #CBD5E1;
+            --white: #FFFFFF;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
+            --shadow-md: 0 10px 24px rgba(0,0,0,0.10);
+            --shadow-lg: 0 16px 40px rgba(0,0,0,0.14);
+        }
         * {
             margin: 0;
             padding: 0;
@@ -14,17 +43,20 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #F0F7F4 0%, #A7D7C5 100%);
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background: linear-gradient(160deg, var(--matcha-100) 0%, var(--matcha-200) 100%);
+            color: var(--ink-700);
             min-height: 100vh;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .header {
-            background: linear-gradient(135deg, #4A7C59, #7FB069);
-            color: white;
-            padding: 15px 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            color: var(--white);
+            padding: 18px 24px;
+            box-shadow: var(--shadow-md);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -45,8 +77,9 @@
         }
 
         .brand h1 {
-            font-size: 1.8rem;
-            font-weight: bold;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
         }
 
         .brand-info {
@@ -58,10 +91,28 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(255,255,255,0.1);
-            padding: 8px 15px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.14);
+            padding: 10px 14px;
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .print-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.14);
+            padding: 6px 10px;
+            border-radius: 999px;
+            backdrop-filter: blur(8px);
         }
 
         .status-dot {
@@ -69,6 +120,7 @@
             height: 10px;
             border-radius: 50%;
             background: #dc3545;
+            box-shadow: 0 0 0 4px rgba(220,53,69,0.15);
             animation: pulse 2s infinite;
         }
 
@@ -86,11 +138,12 @@
             background: rgba(255,255,255,0.2);
             color: white;
             border: 1px solid rgba(255,255,255,0.3);
-            padding: 6px 12px;
-            border-radius: 15px;
+            padding: 8px 14px;
+            border-radius: 999px;
             cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
 
         .connect-btn:hover {
@@ -103,24 +156,24 @@
             margin: 0 auto;
             padding: 20px;
             gap: 20px;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 88px);
         }
 
         /* Left Panel - New Order (65%) */
         .order-panel {
             flex: 0 0 55%;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
         .panel-header {
-            background: linear-gradient(135deg, #4A7C59, #7FB069);
-            color: white;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            color: var(--white);
+            padding: 18px 20px;
             text-align: center;
         }
 
@@ -143,58 +196,60 @@
         .products-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 16px;
             margin-bottom: 20px;
         }
 
         .product-card {
-            background: #F0F7F4;
+            background: var(--matcha-100);
             border: 2px solid transparent;
-            border-radius: 12px;
-            padding: 15px;
+            border-radius: var(--radius-md);
+            padding: 16px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-height: 140px;
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+            min-height: 156px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
         .product-card:hover {
-            border-color: #7FB069;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(74, 124, 89, 0.2);
+            border-color: var(--matcha-400);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
 
         .product-card.selected {
-            border-color: #4A7C59;
-            background: #A7D7C5;
+            border-color: var(--matcha-600);
+            background: var(--matcha-200);
+            box-shadow: inset 0 0 0 2px rgba(74,124,89,0.15);
         }
 
         .product-image {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #7FB069, #A7D7C5);
+            width: 68px;
+            height: 164px;
+            background: linear-gradient(135deg, var(--matcha-400), var(--matcha-300));
             border-radius: 50%;
-            margin: 0 auto 10px;
+            margin: 0 auto 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
+            box-shadow: inset 0 -6px 12px rgba(0,0,0,0.05);
         }
 
         .product-name {
-            font-weight: bold;
-            color: #2D5016;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+            font-weight: 700;
+            color: var(--matcha-800);
+            font-size: 1rem;
+            margin-bottom: 4px;
             line-height: 1.2;
         }
 
         .product-price {
-            color: #D4A574;
-            font-weight: bold;
+            color: var(--sand-500);
+            font-weight: 700;
             font-size: 1rem;
             margin-bottom: 10px;
         }
@@ -203,69 +258,63 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .qty-btn {
-            background: #4A7C59;
+            background: var(--matcha-600);
             color: white;
             border: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
             cursor: pointer;
-            font-size: 1rem;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: transform .15s ease, background .15s ease;
         }
 
-        .qty-btn:hover {
-            background: #7FB069;
-            transform: scale(1.1);
-        }
+        .qty-btn:hover { background: var(--matcha-500); transform: scale(1.06); }
 
-        .qty-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .qty-btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; transform: none; }
 
         .qty-display {
-            font-weight: bold;
-            min-width: 25px;
+            font-weight: 800;
+            min-width: 28px;
             text-align: center;
-            font-size: 1rem;
-            color: #2D5016;
+            font-size: 1.05rem;
+            color: var(--matcha-800);
         }
 
         .order-summary {
-            background: #F0F7F4;
-            border-top: 3px solid #7FB069;
+            background: var(--matcha-100);
+            border-top: 3px solid var(--matcha-400);
             padding: 20px;
         }
 
         .order-title {
-            font-size: 1.2rem;
-            color: #2D5016;
-            margin-bottom: 15px;
+            font-size: 1.15rem;
+            color: var(--matcha-800);
+            margin-bottom: 14px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 800;
+            letter-spacing: -0.01em;
         }
 
         .order-items {
-            max-height: 150px;
+            max-height: 180px;
             overflow-y: auto;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .order-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #A7D7C5;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--matcha-300);
         }
 
         .order-item:last-child {
@@ -276,169 +325,146 @@
             flex: 1;
         }
 
-        .item-name {
-            font-weight: bold;
-            color: #2D5016;
-            font-size: 0.9rem;
-        }
+        .item-name { font-weight: 700; color: var(--matcha-800); font-size: 0.95rem; }
 
-        .item-price {
-            color: #666;
-            font-size: 0.8rem;
-        }
+        .item-price { color: var(--ink-500); font-size: 0.85rem; }
 
-        .item-total {
-            font-weight: bold;
-            color: #D4A574;
-            font-size: 0.9rem;
-        }
+        .item-total { font-weight: 800; color: var(--sand-500); font-size: 0.95rem; }
 
         .order-total {
-            background: #4A7C59;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
+            background: var(--matcha-600);
+            color: var(--white);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
             text-align: center;
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
         }
 
         .customer-input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #A7D7C5;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            padding: 12px 14px;
+            border: 2px solid var(--matcha-300);
+            border-radius: var(--radius-sm);
+            margin-bottom: 14px;
             font-size: 1rem;
-            background: white;
+            background: var(--white);
         }
 
-        .customer-input:focus {
-            outline: none;
-            border-color: #4A7C59;
-        }
+        .customer-input:focus { outline: none; border-color: var(--matcha-600); box-shadow: 0 0 0 3px rgba(110,166,127,0.25); }
 
         .payment-section {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 2px solid #A7D7C5;
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 2px solid var(--matcha-300);
         }
 
-        .payment-title {
-            font-weight: bold;
-            color: #2D5016;
-            margin-bottom: 10px;
-            text-align: center;
-        }
+        .payment-title { font-weight: 800; color: var(--matcha-800); margin-bottom: 12px; text-align: center; }
 
         .denomination-buttons {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
         .denom-btn {
-            background: #F0F7F4;
-            border: 2px solid #A7D7C5;
-            padding: 8px;
-            border-radius: 6px;
+            background: var(--matcha-100);
+            border: 2px solid var(--matcha-300);
+            padding: 10px 8px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: #2D5016;
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--matcha-800);
+            transition: background .12s ease, color .12s ease, border-color .12s ease, transform .12s ease;
         }
 
         .denom-btn:hover, .denom-btn.suggested {
-            background: #7FB069;
-            color: white;
-            border-color: #4A7C59;
+            background: var(--matcha-400);
+            color: var(--white);
+            border-color: var(--matcha-600);
         }
 
         .payment-input {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #A7D7C5;
-            border-radius: 6px;
-            font-size: 1rem;
+            padding: 12px 14px;
+            border: 2px solid var(--matcha-300);
+            border-radius: var(--radius-sm);
+            font-size: 1.05rem;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .change-display {
-            background: #D4A574;
-            color: white;
-            padding: 10px;
-            border-radius: 6px;
+            background: var(--sand-500);
+            color: var(--white);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
             text-align: center;
-            font-weight: bold;
+            font-weight: 800;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .exact-btn {
+            background: #F0F7F4;
+            border: 2px dashed var(--matcha-300);
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--matcha-800);
+            margin-bottom: 10px;
         }
 
         .change-display.insufficient {
             background: #dc3545;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .action-buttons { display: flex; gap: 10px; }
 
         .btn {
             flex: 1;
-            padding: 12px;
+            padding: 14px 16px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
+            border-radius: var(--radius-md);
+            font-size: 1.05rem;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
         }
 
-        .btn-clear {
-            background: #6c757d;
-            color: white;
-        }
+        .btn-clear { background: #6c757d; color: white; }
 
-        .btn-clear:hover {
-            background: #5a6268;
-        }
+        .btn-clear:hover { background: #5a6268; }
 
-        .btn-print {
-            background: linear-gradient(135deg, #4A7C59, #7FB069);
-            color: white;
-        }
+        .btn-print { background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400)); color: white; }
 
-        .btn-print:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(74, 124, 89, 0.3);
-        }
+        .btn-print:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(74, 124, 89, 0.26); }
 
-        .btn:disabled {
-            background: #e9ecef;
-            color: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .btn:disabled { background: #e9ecef; color: #6c757d; cursor: not-allowed; transform: none; box-shadow: none; }
 
         /* Right Panel - Order Queue (wider) */
         .queue-panel {
             flex: 0 0 75%;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
         .queue-header {
-            background: linear-gradient(135deg, #D4A574, #7FB069);
-            color: white;
-            padding: 20px;
+            background: linear-gradient(135deg, var(--sand-500), var(--matcha-400));
+            color: var(--white);
+            padding: 18px 20px;
             text-align: center;
         }
 
@@ -451,6 +477,9 @@
         .stat {
             text-align: center;
         }
+
+        .stat.clickable { cursor: pointer; }
+        .stat.active .stat-number { text-decoration: underline; }
 
         .stat-number {
             font-size: 1.5rem;
@@ -469,30 +498,21 @@
         }
 
         .queue-item {
-            background: #F0F7F4;
-            border-left: 4px solid #A7D7C5;
-            border-radius: 8px;
-            padding: 15px;
+            background: var(--matcha-100);
+            border-left: 4px solid var(--matcha-300);
+            border-radius: var(--radius-sm);
+            padding: 14px;
             margin-bottom: 10px;
-            transition: all 0.3s ease;
+            transition: background .12s ease, transform .12s ease, box-shadow .12s ease;
         }
 
-        .queue-item.new {
-            border-left-color: #ffc107;
-        }
+        .queue-item.new { border-left-color: #ffc107; }
 
-        .queue-item.in-progress {
-            border-left-color: #007bff;
-        }
+        .queue-item.in-progress { border-left-color: #007bff; }
 
-        .queue-item.ready {
-            border-left-color: #28a745;
-        }
+        .queue-item.ready { border-left-color: #28a745; }
 
-        .queue-item.completed {
-            border-left-color: #6c757d;
-            opacity: 0.7;
-        }
+        .queue-item.completed { border-left-color: #6c757d; opacity: 0.7; }
 
         .queue-header-info {
             display: flex;
@@ -501,33 +521,15 @@
             margin-bottom: 10px;
         }
 
-        .order-id {
-            font-weight: bold;
-            color: #2D5016;
-        }
+        .order-id { font-weight: 800; color: var(--matcha-800); }
 
-        .order-time {
-            font-size: 0.8rem;
-            color: #666;
-        }
+        .order-time { font-size: 0.8rem; color: var(--ink-500); }
 
-        .customer-name {
-            font-size: 0.9rem;
-            color: #4A7C59;
-            margin-bottom: 8px;
-        }
+        .customer-name { font-size: 0.95rem; color: var(--matcha-600); margin-bottom: 8px; font-weight: 700; }
 
-        .queue-items {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 10px;
-        }
+        .queue-items { font-size: 0.9rem; color: var(--ink-500); margin-bottom: 10px; }
 
-        .queue-total {
-            font-weight: bold;
-            color: #D4A574;
-            margin-bottom: 10px;
-        }
+        .queue-total { font-weight: 800; color: var(--sand-500); margin-bottom: 10px; }
 
         .status-buttons {
             display: flex;
@@ -536,12 +538,13 @@
 
         .status-btn {
             flex: 1;
-            padding: 6px;
+            padding: 8px 10px;
             border: none;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform .12s ease, background .12s ease;
         }
 
         .status-btn.new {
@@ -564,19 +567,9 @@
             color: white;
         }
 
-        .empty-queue {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 40px 20px;
-        }
+        .empty-queue { text-align: center; color: var(--ink-500); font-style: italic; padding: 40px 20px; }
 
-        .empty-order {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 20px;
-        }
+        .empty-order { text-align: center; color: var(--ink-500); font-style: italic; padding: 20px; }
 
         .notification {
             position: fixed;
@@ -584,12 +577,13 @@
             right: 20px;
             background: #28a745;
             color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
             transform: translateX(400px);
-            transition: transform 0.3s ease;
+            transition: transform 0.2s ease;
             z-index: 1000;
+            font-weight: 700;
         }
 
         .notification.show {
@@ -645,25 +639,25 @@
             justify-content: flex-end;
         }
         .primary-action {
-            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
             color: #fff;
             border: none;
             padding: 12px 18px;
-            border-radius: 10px;
-            font-weight: 700;
+            border-radius: var(--radius-md);
+            font-weight: 800;
             cursor: pointer;
             box-shadow: 0 6px 16px rgba(74,124,89,.25);
         }
         .summary-panel {
             flex: 0 0 45%;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             padding: 20px;
-            border-left: 4px solid #7FB069;
+            border-left: 4px solid var(--matcha-400);
         }
         .customer-toggle { margin-top: 8px; text-align: center; }
         .customer-toggle button { background: transparent; color: #2D5016; border: none; text-decoration: underline; cursor: pointer; font-weight: 600; }
@@ -687,6 +681,9 @@
             color: #fff;
             border-color: #4A7C59;
         }
+
+        /* Hide legacy tabs (navigation moved to stats) */
+        .tabs { display: none; }
         .finish-btn {
             background: #28a745;
             color: #fff;
@@ -712,10 +709,10 @@
         .confirm-content {
             background: #fff;
             padding: 20px;
-            border-radius: 12px;
+            border-radius: var(--radius-lg);
             width: 320px;
             text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,.2);
+            box-shadow: var(--shadow-lg);
         }
         .confirm-actions { display:flex; gap:10px; margin-top: 15px; }
         .confirm-yes { flex:1; background:#28a745; color:#fff; font-weight:800; padding:10px; border:none; border-radius:8px; }
@@ -725,21 +722,91 @@
         .big-action-panel {
             flex: 0 0 25%;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: stretch;
+            justify-content: stretch;
         }
         .big-primary {
             width: 100%;
-            height: 70%;
+            flex: 1 1 auto;
             font-size: 2rem;
             line-height: 1.2;
-            background: linear-gradient(135deg, #4A7C59, #7FB069);
+            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
             color: #fff;
             border: none;
             border-radius: 18px;
             box-shadow: 0 12px 28px rgba(74,124,89,.35);
             cursor: pointer;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+        }
+
+        /* Actions stack and secondary button */
+        .big-actions-stack {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: stretch;
+            height: 100%;
+        }
+        .big-secondary {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            background: #F0F7F4;
+            color: var(--matcha-800);
+            border: 2px solid var(--matcha-300);
+            border-radius: 14px;
+            cursor: pointer;
             font-weight: 800;
+        }
+
+        /* Stats page */
+        .stats-panel {
+            flex: 1 1 auto;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .stats-header {
+            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-content { padding: 16px; overflow-y:auto; }
+        .card { background:#F8FFFB; border:2px solid var(--matcha-300); border-radius:12px; padding:12px; margin-bottom:12px; }
+        .bar-row { display:flex; align-items:center; gap:8px; margin:6px 0; }
+        .bar-label { flex: 0 0 180px; font-weight:700; color: var(--matcha-800); }
+        .bar-track { flex:1; background:#e9f6f0; height:14px; border-radius:999px; overflow:hidden; }
+        .bar-fill { height:100%; background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400)); }
+        .bar-meta { flex: 0 0 160px; text-align:right; font-weight:700; color: var(--sand-500); }
+
+        /* Product image support */
+        .product-image { display:flex; align-items:center; justify-content:center; background:#F0F7F4; border:2px solid var(--matcha-200); border-radius:12px; overflow:hidden; width:100%; aspect-ratio:9/16; font-size:2rem; }
+        .product-image img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
+
+        /* Time bucket bars */
+        .time-card-title { font-weight:800; color: var(--matcha-800); margin-bottom:6px }
+        .time-bars { display:flex; gap:6px; align-items:flex-end; height:140px; }
+        .time-bar { width: 10px; background: var(--matcha-400); border-radius:6px 6px 0 0; position:relative; }
+        .time-bar.highlight { background: var(--matcha-600); box-shadow: 0 0 0 2px rgba(74,124,89,0.15); }
+        .time-axis { display:flex; gap:6px; font-size:10px; color:#777; margin-top:6px; overflow-x:auto; }
+        .time-tick { width:10px; text-align:center; white-space:nowrap; }
+
+        /* Focus states for accessibility & speed */
+        button:focus-visible, input:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(110,166,127,0.35); }
+
+        /* Motion safety */
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
         }
     </style>
 </head>
@@ -756,12 +823,17 @@
                     </div>
                 </div>
             </div>
-            <div class="printer-status">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="printerStatus">Disconnected</span>
-                <button class="connect-btn" id="connectBtn" onclick="connectToPrinter()">
-                    Connect
-                </button>
+            <div class="header-right">
+                <label class="print-toggle" title="Toggle printing receipt on Complete Order">
+                    <input type="checkbox" id="printToggle"> Print receipt
+                </label>
+                <div class="printer-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="printerStatus">Disconnected</span>
+                    <button class="connect-btn" id="connectBtn" onclick="connectToPrinter()">
+                        Connect
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -796,6 +868,7 @@
             <div class="order-total" id="orderTotal">Total: Rp0</div>
             <div class="payment-section">
                 <div class="payment-title">Payment Amount</div>
+                <button type="button" class="exact-btn" id="exactBtn">Uang pas</button>
                 <div class="denomination-buttons" id="denominationButtons"></div>
                 <input type="number" class="payment-input" id="paymentInput" placeholder="Custom amount">
                 <div class="change-display" id="changeDisplay" style="display: none;">Change: Rp0</div>
@@ -814,7 +887,10 @@
         </div>
 
         <div class="big-action-panel hidden" id="bigActionPanel">
-            <button class="big-primary" onclick="showOrderForm()">+ Add New Order</button>
+            <div class="big-actions-stack">
+                <button class="big-primary" onclick="showOrderForm()">+ Add New Order</button>
+                <button class="big-secondary" onclick="showStatsPage()">Tampilkan Penjualan</button>
+            </div>
         </div>
 
         <div class="queue-panel" id="queuePanel">
@@ -826,15 +902,15 @@
                     <button class="tab-btn" id="tab-cancelled" onclick="setQueueTab('cancelled')">Cancelled</button>
                 </div>
                 <div class="queue-stats">
-                    <div class="stat">
+                    <div class="stat clickable" id="stat-in_progress" onclick="setQueueTab('in_progress')">
                         <div class="stat-number" id="inProgressOrders">0</div>
                         <div class="stat-label">In Progress</div>
                     </div>
-                    <div class="stat">
+                    <div class="stat clickable" id="stat-completed" onclick="setQueueTab('completed')">
                         <div class="stat-number" id="readyOrders">0</div>
                         <div class="stat-label">Completed</div>
                     </div>
-                    <div class="stat">
+                    <div class="stat clickable" id="stat-cancelled" onclick="setQueueTab('cancelled')">
                         <div class="stat-number" id="cancelledOrders">0</div>
                         <div class="stat-label">Cancelled</div>
                     </div>
@@ -849,6 +925,15 @@
 
     <div class="notification" id="notification"></div>
 
+    <!-- Stats Page -->
+    <div class="stats-panel hidden" id="statsPanel">
+        <div class="stats-header">
+            <div style="font-weight:800">Penjualan Hari Ini</div>
+            <button class="connect-btn" onclick="showQueue()">Kembali</button>
+        </div>
+        <div class="stats-content" id="statsContent"></div>
+    </div>
+
     <script>
         // Store and product information
         const STORE_INFO = {
@@ -859,14 +944,16 @@
         };
 
         const PRODUCTS = {
-            "matcha_latte": { name: "Matcha Latte", price: 13000, emoji: "☕" },
-            "cloud_matcha": { name: "Cloud Matcha", price: 15000, emoji: "☁️" },
-            "matcha_cookies": { name: "Matcha Cookies", price: 15000, emoji: "🍪" },
-            "coconut_matcha": { name: "Coconut Matcha", price: 15000, emoji: "🥥" },
-            "honey_matcha": { name: "Honey Matcha", price: 13000, emoji: "🍯" },
-            "strawberry_cream_matcha": { name: "Strawberry Cream Matcha", price: 15000, emoji: "🍓" },
-            "caramel_matcha": { name: "Caramel Matcha", price: 15000, emoji: "🍮" },
-            "ubi_cream_matcha": { name: "Ubi Cream Matcha Latte", price: 15000, emoji: "🍠" },
+            "matcha_og": { name: "Matcha OG", price: 13000, emoji: "☕", image: "asstes/images/matcha-OG.jpg" },
+            "cloud_matcha": { name: "Cloud Matcha", price: 14000, emoji: "☁️", image: "asstes/images/matcha-cloud.jpg" },
+            "matcha_cookies": { name: "Matcha Cookies", price: 15000, emoji: "🍪", image: "asstes/images/matcha-cookies.jpg" },
+            "coconut_matcha": { name: "Coconut Matcha", price: 15000, emoji: "🥥", image: "asstes/images/matcha-coconut.jpg" },
+            "honey_matcha": { name: "Honey Matcha", price: 14000, emoji: "🍯", image: "asstes/images/matcha-honey.jpg" },
+            "strawberry_cream_matcha": { name: "Strawberry Cream Matcha", price: 15000, emoji: "🍓", image: "asstes/images/matcha-strawberry-cream.jpg" },
+            "caramel_matcha": { name: "Caramel Matcha", price: 15000, emoji: "🍮", image: "asstes/images/matcha-caramel.jpg" },
+            // Note: image file uses 'ube' while product key is 'ubi'
+            "ubi_cream_matcha": { name: "Ubi Cream Matcha Latte", price: 15000, emoji: "🍠", image: "asstes/images/matcha-ube-cream.jpg" },
+            // No image available in asstes/images, fallback to emoji
             "choco_cream_matcha": { name: "Choco Cream Matcha", price: 15000, emoji: "🍫" }
         };
 
@@ -880,6 +967,7 @@
         let orderQueue = [];
         let orderCounter = 1;
         let paymentAmount = 0;
+        let printEnabled = true;
 
         // Utility functions
         function formatRupiah(amount) {
@@ -907,6 +995,19 @@
                 currentOrder = data.currentOrder || {};
                 orderQueue = data.orderQueue || [];
                 orderCounter = data.orderCounter || 1;
+            }
+        }
+
+        function loadSettings() {
+            const s = localStorage.getItem('print_enabled');
+            printEnabled = s === null ? true : s === 'true';
+            const toggle = document.getElementById('printToggle');
+            if (toggle) {
+                toggle.checked = printEnabled;
+                toggle.addEventListener('change', () => {
+                    printEnabled = toggle.checked;
+                    localStorage.setItem('print_enabled', String(printEnabled));
+                });
             }
         }
 
@@ -1031,7 +1132,7 @@
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
-                    <div class="product-image">${product.emoji}</div>
+                    <div class="product-image">${product.image ? `<img src="${product.image}" alt="${product.name}" width="1080" height="1920" loading="lazy" decoding="async" onerror="this.style.display='none'; this.parentElement.textContent='${product.emoji || ''}'">` : (product.emoji || '')}</div>
                     <div class="product-name">${product.name}</div>
                     <div class="product-price">${formatRupiah(product.price)}</div>
                     <div class="quantity-controls">
@@ -1111,6 +1212,7 @@
             const denominationButtons = document.getElementById('denominationButtons');
             const paymentInput = document.getElementById('paymentInput');
             const changeDisplay = document.getElementById('changeDisplay');
+            const exactBtn = document.getElementById('exactBtn');
 
             // Build/refresh denomination buttons with smart suggestion
             denominationButtons.innerHTML = '';
@@ -1132,6 +1234,15 @@
                 paymentAmount = isNaN(val) ? 0 : val;
                 refreshChange(orderTotal);
             };
+
+            // Exact change shortcut
+            if (exactBtn) {
+                exactBtn.onclick = () => {
+                    paymentAmount = orderTotal;
+                    paymentInput.value = orderTotal;
+                    refreshChange(orderTotal);
+                };
+            }
 
             // Calculate and display change
             function refreshChange(total) {
@@ -1264,8 +1375,15 @@
             saveToLocalStorage();
             renderQueue();
 
-            // Attempt printing but do not block
-            printReceipt(order);
+            // Handle printing based on toggle
+            if (printEnabled) {
+                // Attempt printing but do not block
+                printReceipt(order);
+            } else {
+                // Directly move to in_progress without printing
+                updateOrderStatus(order.id, 'in_progress');
+                showQueue();
+            }
 
             // Reset UI for next customer
             clearOrder();
@@ -1307,6 +1425,13 @@
             document.getElementById('inProgressOrders').textContent = orderQueue.filter(o => o.status === 'in_progress').length;
             document.getElementById('readyOrders').textContent = orderQueue.filter(o => o.status === 'completed').length;
             document.getElementById('cancelledOrders').textContent = orderQueue.filter(o => o.status === 'cancelled').length;
+
+            // Update today omzet
+            const todayEl = document.getElementById('todayOmzet');
+            if (todayEl) todayEl.textContent = formatRupiah(calculateTodayOmzet());
+
+            // Update active state on stats
+            updateStatsActive();
         }
 
         function updateOrderStatus(orderId, status) {
@@ -1327,7 +1452,142 @@
             document.getElementById('tab-in_progress').classList.toggle('active', tab === 'in_progress');
             document.getElementById('tab-completed').classList.toggle('active', tab === 'completed');
             document.getElementById('tab-cancelled').classList.toggle('active', tab === 'cancelled');
+            updateStatsActive();
             renderQueue();
+        }
+
+        function updateStatsActive() {
+            const ids = ['in_progress','completed','cancelled'];
+            ids.forEach(id => {
+                const el = document.getElementById(`stat-${id}`);
+                if (el) el.classList.toggle('active', selectedQueueTab === id);
+            });
+        }
+
+        function isToday(dateStr) {
+            const d = new Date(dateStr);
+            const t = new Date();
+            return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+        }
+
+        function calculateTodayOmzet() {
+            return orderQueue
+                .filter(o => isToday(o.timestamp) && o.status === 'completed')
+                .reduce((sum, o) => sum + (o.total || 0), 0);
+        }
+
+        function aggregateToday() {
+            const todayCompleted = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'completed');
+            const omzet = todayCompleted.reduce((s, o) => s + (o.total || 0), 0);
+            const itemMap = new Map();
+            todayCompleted.forEach(o => {
+                o.items.forEach(it => {
+                    const prev = itemMap.get(it.productId) || { name: it.productName, qty: 0, total: 0 };
+                    prev.qty += it.quantity;
+                    prev.total += it.price * it.quantity;
+                    itemMap.set(it.productId, prev);
+                });
+            });
+            const items = Array.from(itemMap.values()).sort((a,b) => b.qty - a.qty);
+            const totalItems = items.reduce((s,i)=>s+i.qty,0);
+            return { omzet, items, totalItems };
+        }
+
+        function renderStatsPage() {
+            const { omzet, items, totalItems } = aggregateToday();
+            const maxQty = Math.max(1, ...items.map(i => i.qty));
+            const content = document.getElementById('statsContent');
+            let html = '';
+            html += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:800; color:var(--matcha-800)">Total Omzet</div>
+                        <div style="font-weight:900; color:var(--sand-500); font-size:1.2rem">${formatRupiah(omzet)}</div>
+                    </div>
+                    <div style="margin-top:6px; color:#666">Items terjual: <strong>${totalItems}</strong></div>
+                </div>`;
+
+            html += `<div class="card">
+                        <div style="font-weight:800; color:var(--matcha-800); margin-bottom:6px">Most Selling Items</div>`;
+            if (!items.length) {
+                html += `<div style="color:#666; font-style:italic">Belum ada penjualan hari ini</div>`;
+            } else {
+                items.forEach(it => {
+                    const w = Math.round((it.qty / maxQty) * 100);
+                    html += `
+                    <div class="bar-row">
+                        <div class="bar-label">${it.name}</div>
+                        <div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div>
+                        <div class="bar-meta">${it.qty} | ${formatRupiah(it.total)}</div>
+                    </div>`;
+                });
+            }
+            html += `</div>`;
+
+            // Time buckets (30-minute intervals)
+            const buckets = aggregateTodayBuckets30m();
+            const maxBucket = Math.max(0, ...buckets.map(b => b.count));
+            const peak = buckets.reduce((p, b) => (b.count > p.count ? b : p), { count: -1 });
+            html += `
+                <div class="card">
+                    <div class="time-card-title">Penjualan per 30 Menit ${peak.count >= 0 ? `(Puncak: ${peak.label} — ${peak.count} item)` : ''}</div>
+                    <div class="time-bars">`;
+            buckets.forEach(b => {
+                const h = maxBucket ? Math.round((b.count / maxBucket) * 100) : 0;
+                const hi = peak && b.label === peak.label && b.count === peak.count;
+                html += `<div class="time-bar ${hi ? 'highlight' : ''}" title="${b.label}: ${b.count}" style="height:${Math.max(4,h)}%"></div>`;
+            });
+            html += `</div>
+                    <div class="time-axis">`;
+            buckets.forEach((b, idx) => {
+                // Show label at each full hour (when bucket start minute == 0)
+                const show = b.start.getMinutes() === 0;
+                html += `<div class="time-tick">${show ? pad2(b.start.getHours()) + ':' + pad2(b.start.getMinutes()) : '&nbsp;'}</div>`;
+            });
+            html += `</div>
+                </div>`;
+
+            content.innerHTML = html;
+        }
+
+        function pad2(n){ return n.toString().padStart(2,'0'); }
+
+        function aggregateTodayBuckets30m() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            const msPerBucket = 30 * 60 * 1000;
+            const bucketCount = Math.floor((now - start) / msPerBucket) + 1;
+            const buckets = Array.from({ length: bucketCount }, (_, i) => {
+                const s = new Date(start.getTime() + i * msPerBucket);
+                const e = new Date(Math.min(start.getTime() + (i + 1) * msPerBucket, now.getTime()));
+                return { start: s, end: e, label: `${pad2(s.getHours())}:${pad2(s.getMinutes())}-${pad2(e.getHours())}:${pad2(e.getMinutes())}`, count: 0 };
+            });
+
+            const todayCompleted = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'completed');
+            todayCompleted.forEach(o => {
+                const t = new Date(o.timestamp);
+                if (t < start || t > now) return;
+                const idx = Math.min(buckets.length - 1, Math.floor((t - start) / msPerBucket));
+                const itemsCount = o.items.reduce((s, it) => s + (it.quantity || 0), 0);
+                buckets[idx].count += itemsCount;
+            });
+
+            return buckets;
+        }
+
+        function showStatsPage() {
+            uiMode = 'stats';
+            document.getElementById('orderPanel').classList.add('hidden');
+            document.getElementById('summaryPanel').classList.add('hidden');
+            document.getElementById('queuePanel').classList.add('hidden');
+            const toolbar = document.getElementById('toolbar');
+            if (toolbar) toolbar.classList.add('hidden');
+            const big = document.getElementById('bigActionPanel');
+            if (big) big.classList.add('hidden');
+            const main = document.getElementById('mainContainer');
+            if (main) main.classList.add('hidden');
+            document.getElementById('statsPanel').classList.remove('hidden');
+            renderStatsPage();
         }
 
         function showQueue() {
@@ -1339,6 +1599,10 @@
             if (toolbar) toolbar.classList.add('hidden');
             const big = document.getElementById('bigActionPanel');
             if (big) big.classList.remove('hidden');
+            const stats = document.getElementById('statsPanel');
+            if (stats) stats.classList.add('hidden');
+            const main = document.getElementById('mainContainer');
+            if (main) main.classList.remove('hidden');
         }
 
         function showOrderForm() {
@@ -1350,6 +1614,10 @@
             if (toolbar) toolbar.classList.add('hidden');
             const big = document.getElementById('bigActionPanel');
             if (big) big.classList.add('hidden');
+            const stats = document.getElementById('statsPanel');
+            if (stats) stats.classList.add('hidden');
+            const main = document.getElementById('mainContainer');
+            if (main) main.classList.remove('hidden');
             // Ensure payment amount not preselected
             paymentAmount = 0;
             document.getElementById('paymentInput').value = '';
@@ -1414,6 +1682,7 @@
 
         function init() {
             loadFromLocalStorage();
+            loadSettings();
             initializeProducts();
             restoreProductSelections();
             updateOrderSummary();
@@ -1438,6 +1707,17 @@
             <div class="confirm-actions">
                 <button id="confirmYes" class="confirm-yes">Yes</button>
                 <button id="confirmNo" class="confirm-no">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Stats Modal -->
+    <div class="confirm-modal" id="dailyStatsModal">
+        <div class="confirm-content">
+            <div style="font-weight:800; margin-bottom:10px">Today's Sales</div>
+            <div id="dailyStatsBody"></div>
+            <div class="confirm-actions">
+                <button id="dailyStatsClose" class="confirm-no" style="flex:1">Close</button>
             </div>
         </div>
     </div>
