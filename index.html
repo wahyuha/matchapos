@@ -1423,7 +1423,7 @@
 
             // Update stats
             document.getElementById('inProgressOrders').textContent = orderQueue.filter(o => o.status === 'in_progress').length;
-            document.getElementById('readyOrders').textContent = orderQueue.filter(o => o.status === 'completed').length;
+            document.getElementById('readyOrders').textContent = orderQueue.filter(o => o.status === 'completed' && isToday(o.timestamp)).length;
             document.getElementById('cancelledOrders').textContent = orderQueue.filter(o => o.status === 'cancelled').length;
 
             // Update today omzet
