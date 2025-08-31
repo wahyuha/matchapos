@@ -304,9 +304,11 @@
         }
 
         .order-items {
-            max-height: 180px;
+            flex: 1 1 auto;
+            max-height: none;
             overflow-y: auto;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
+            min-height: 160px;
         }
 
         .order-item {
@@ -356,59 +358,80 @@
 
         .customer-input:focus { outline: none; border-color: var(--matcha-600); box-shadow: 0 0 0 3px rgba(110,166,127,0.25); }
 
+        .summary-panel { display: flex; flex-direction: column; }
+
+        .summary-footer {
+            position: sticky;
+            bottom: 0;
+            background: #fff;
+            padding-top: 6px;
+            padding-bottom: 6px;
+            border-top: 1px solid var(--matcha-200);
+        }
+
         .payment-section {
             background: var(--white);
             border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 16px;
+            padding: 10px;
+            margin-bottom: 8px;
             border: 2px solid var(--matcha-300);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
         }
 
-        .payment-title { font-weight: 800; color: var(--matcha-800); margin-bottom: 12px; text-align: center; }
+        .payment-title { font-weight: 800; color: var(--matcha-800); margin: 0; font-size: .95rem; flex: 0 0 auto; }
 
         .denomination-buttons {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            flex: 1 1 auto;
+            min-height: 40px;
         }
 
         .denom-btn {
             background: var(--matcha-100);
             border: 2px solid var(--matcha-300);
-            padding: 10px 8px;
+            padding: 8px 10px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 700;
             color: var(--matcha-800);
             transition: background .12s ease, color .12s ease, border-color .12s ease, transform .12s ease;
+            white-space: nowrap;
         }
 
-        .denom-btn:hover, .denom-btn.suggested {
+        .denom-btn:hover, .denom-btn.suggested, .denom-btn.selected {
             background: var(--matcha-400);
             color: var(--white);
             border-color: var(--matcha-600);
         }
 
         .payment-input {
-            width: 100%;
-            padding: 12px 14px;
+            width: auto;
+            padding: 8px 10px;
             border: 2px solid var(--matcha-300);
             border-radius: var(--radius-sm);
             font-size: 1.05rem;
             text-align: center;
-            margin-bottom: 12px;
+            margin: 0;
+            flex: 0 0 140px;
         }
 
         .change-display {
             background: var(--sand-500);
             color: var(--white);
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-radius: var(--radius-sm);
             text-align: center;
             font-weight: 800;
             box-shadow: var(--shadow-sm);
+            flex: 0 0 auto;
         }
 
         .exact-btn {
@@ -420,7 +443,13 @@
             font-size: 0.9rem;
             font-weight: 700;
             color: var(--matcha-800);
-            margin-bottom: 10px;
+            margin: 0;
+            flex: 0 0 auto;
+        }
+        .exact-btn.selected {
+            background: var(--matcha-400);
+            color: #fff;
+            border-color: var(--matcha-600);
         }
 
         .change-display.insufficient {
@@ -865,24 +894,26 @@
             <div class="order-items" id="orderItems">
                 <div class="empty-order">No items selected</div>
             </div>
-            <div class="order-total" id="orderTotal">Total: Rp0</div>
-            <div class="payment-section">
-                <div class="payment-title">Payment Amount</div>
-                <button type="button" class="exact-btn" id="exactBtn">Uang pas</button>
-                <div class="denomination-buttons" id="denominationButtons"></div>
-                <input type="number" class="payment-input" id="paymentInput" placeholder="Custom amount">
-                <div class="change-display" id="changeDisplay" style="display: none;">Change: Rp0</div>
-            </div>
-            <div class="customer-toggle">
-                <button type="button" onclick="toggleCustomer()" id="customerToggleBtn">Add customer name</button>
-            </div>
-            <div id="customerSection" class="hidden">
-                <input type="text" class="customer-input" id="customerName" placeholder="Customer name (optional)">
-            </div>
-            <div class="action-buttons">
-                <button class="btn cancel-btn" onclick="cancelOrder()">Cancel</button>
-                <button class="btn btn-clear" onclick="clearOrder()">Clear</button>
-                <button class="btn btn-print" id="printBtn" onclick="processOrder()" disabled>Complete Order</button>
+            <div class="summary-footer">
+                <div class="order-total" id="orderTotal">Total: Rp0</div>
+                <div class="payment-section">
+                    <div class="payment-title">Payment Amount</div>
+                    <button type="button" class="exact-btn" id="exactBtn">Uang pas</button>
+                    <div class="denomination-buttons" id="denominationButtons"></div>
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" class="payment-input" id="paymentInput" placeholder="Rp0">
+                    <div class="change-display" id="changeDisplay" style="display: none;">Change: Rp0</div>
+                </div>
+                <div class="customer-toggle">
+                    <button type="button" onclick="toggleCustomer()" id="customerToggleBtn">Add customer name</button>
+                </div>
+                <div id="customerSection" class="hidden">
+                    <input type="text" class="customer-input" id="customerName" placeholder="Customer name (optional)">
+                </div>
+                <div class="action-buttons">
+                    <button class="btn cancel-btn" onclick="cancelOrder()">Cancel</button>
+                    <button class="btn btn-clear" onclick="clearOrder()">Clear</button>
+                    <button class="btn btn-print" id="printBtn" onclick="processOrder()" disabled>Complete Order</button>
+                </div>
             </div>
         </div>
 
@@ -1216,22 +1247,31 @@
 
             // Build/refresh denomination buttons with smart suggestion
             denominationButtons.innerHTML = '';
+            const createdButtons = [];
             for (const denom of DENOMINATIONS) {
                 const btn = document.createElement('button');
                 btn.className = 'denom-btn';
+                btn.dataset.amount = String(denom);
                 btn.textContent = formatRupiah(denom);
                 btn.addEventListener('click', () => {
                     paymentAmount = denom;
-                    paymentInput.value = denom;
+                    paymentInput.value = formatRupiah(denom);
                     refreshChange(orderTotal);
                 });
                 denominationButtons.appendChild(btn);
+                createdButtons.push(btn);
             }
 
-            // Bind input handler
+            // Bind input handler with live IDR formatting
+            function parseRupiahToInt(str) {
+                const digits = (str || '').replace(/[^0-9]/g, '');
+                return digits ? parseInt(digits, 10) : 0;
+            }
+
             paymentInput.oninput = () => {
-                const val = parseInt(paymentInput.value, 10);
-                paymentAmount = isNaN(val) ? 0 : val;
+                const val = parseRupiahToInt(paymentInput.value);
+                paymentAmount = val;
+                paymentInput.value = val ? formatRupiah(val) : '';
                 refreshChange(orderTotal);
             };
 
@@ -1239,7 +1279,7 @@
             if (exactBtn) {
                 exactBtn.onclick = () => {
                     paymentAmount = orderTotal;
-                    paymentInput.value = orderTotal;
+                    paymentInput.value = formatRupiah(orderTotal);
                     refreshChange(orderTotal);
                 };
             }
@@ -1261,6 +1301,18 @@
                     changeDisplay.textContent = `Change: ${formatRupiah(diff)}`;
                 }
                 document.getElementById('printBtn').disabled = diff < 0 || Object.keys(currentOrder).length === 0;
+                applySelectionStyles(total);
+            }
+
+            // Reflect selection styles for denom buttons and exact button
+            function applySelectionStyles(total) {
+                const isExact = paymentAmount === total && total > 0;
+                if (exactBtn) exactBtn.classList.toggle('selected', isExact);
+                createdButtons.forEach(btn => {
+                    const amt = parseInt(btn.dataset.amount || '0', 10);
+                    const selected = !isExact && amt === paymentAmount;
+                    btn.classList.toggle('selected', selected);
+                });
             }
 
             // Initialize current display
