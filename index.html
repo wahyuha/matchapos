@@ -1535,7 +1535,10 @@
             buckets.forEach(b => {
                 const h = maxBucket ? Math.round((b.count / maxBucket) * 100) : 0;
                 const hi = peak && b.label === peak.label && b.count === peak.count;
-                html += `<div class="time-bar ${hi ? 'highlight' : ''}" title="${b.label}: ${b.count}" style="height:${Math.max(4,h)}%"></div>`;
+                const ratio = maxBucket ? (b.count / maxBucket) : 0; // 0..1
+                const light = Math.max(30, Math.min(80, Math.round(80 - ratio * 40))); // 80% (low) -> 40% (high)
+                const color = `hsl(140, 60%, ${light}%)`;
+                html += `<div class="time-bar ${hi ? 'highlight' : ''}" title="${b.label}: ${b.count}" style="height:${Math.max(4,h)}%; background:${color}"></div>`;
             });
             html += `</div>
                     <div class="time-axis">`;
@@ -1547,6 +1550,30 @@
             html += `</div>
                 </div>`;
 
+            // Daily range (1-7 days) omzet bar chart
+            const daily = aggregateDailyOmzet(dailyRangeDays);
+            const maxAmt = Math.max(1, ...daily.map(d => d.amount));
+            html += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+                        <div class="time-card-title">Ringkasan Harian (Omzet)</div>
+                        <div>
+                            ${[1,2,3,4,5,6,7].map(n => `<button onclick="setDailyRange(${n})" class="tab-btn ${n===dailyRangeDays?'active':''}" style="padding:6px 10px; font-size:0.85rem;">${n} hari</button>`).join(' ')}
+                        </div>
+                    </div>
+                    <div class="time-bars">`;
+            daily.forEach(d => {
+                const h = maxAmt ? Math.round((d.amount / maxAmt) * 100) : 0;
+                html += `<div class="time-bar" title="${d.label}: ${formatRupiah(d.amount)}" style="height:${Math.max(4,h)}%"></div>`;
+            });
+            html += `</div>
+                    <div class="time-axis">`;
+            daily.forEach(d => {
+                html += `<div class="time-tick" title="${d.full}">${d.label}</div>`;
+            });
+            html += `</div>
+                </div>`;
+
             content.innerHTML = html;
         }
 
@@ -1554,25 +1581,54 @@
 
         function aggregateTodayBuckets30m() {
             const now = new Date();
-            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0); // 09:00 (static)
+            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 21, 0, 0, 0); // 21:00 (static)
             const msPerBucket = 30 * 60 * 1000;
-            const bucketCount = Math.floor((now - start) / msPerBucket) + 1;
+            const bucketCount = Math.floor((end - start) / msPerBucket); // fixed 24 buckets
             const buckets = Array.from({ length: bucketCount }, (_, i) => {
                 const s = new Date(start.getTime() + i * msPerBucket);
-                const e = new Date(Math.min(start.getTime() + (i + 1) * msPerBucket, now.getTime()));
+                const e = new Date(start.getTime() + (i + 1) * msPerBucket);
                 return { start: s, end: e, label: `${pad2(s.getHours())}:${pad2(s.getMinutes())}-${pad2(e.getHours())}:${pad2(e.getMinutes())}`, count: 0 };
             });
 
             const todayCompleted = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'completed');
             todayCompleted.forEach(o => {
                 const t = new Date(o.timestamp);
-                if (t < start || t > now) return;
-                const idx = Math.min(buckets.length - 1, Math.floor((t - start) / msPerBucket));
+                if (t < start || t >= end) return; // keep within [09:00, 21:00)
+                const idx = Math.floor((t - start) / msPerBucket);
                 const itemsCount = o.items.reduce((s, it) => s + (it.quantity || 0), 0);
-                buckets[idx].count += itemsCount;
+                if (buckets[idx]) buckets[idx].count += itemsCount;
             });
 
             return buckets;
+        }
+
+        // Daily omzet aggregation for last N days (including today)
+        let dailyRangeDays = 7;
+        function aggregateDailyOmzet(days) {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1), 0, 0, 0, 0);
+            const oneDay = 24 * 60 * 60 * 1000;
+            const result = [];
+            for (let i = 0; i < days; i++) {
+                const dayStart = new Date(start.getTime() + i * oneDay);
+                const dayEnd = new Date(dayStart.getTime() + oneDay - 1);
+                const amount = orderQueue
+                    .filter(o => {
+                        const t = new Date(o.timestamp);
+                        return o.status === 'completed' && t >= dayStart && t <= dayEnd;
+                    })
+                    .reduce((sum, o) => sum + (o.total || 0), 0);
+                const dd = pad2(dayStart.getDate());
+                const mm = pad2(dayStart.getMonth() + 1);
+                result.push({ date: dayStart, label: `${dd}/${mm}`, full: `${dd}/${mm}/${dayStart.getFullYear()}`, amount });
+            }
+            return result;
+        }
+
+        function setDailyRange(n) {
+            dailyRangeDays = n;
+            renderStatsPage();
         }
 
         function showStatsPage() {
