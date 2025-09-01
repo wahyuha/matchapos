@@ -1604,6 +1604,9 @@
 
             // Daily range (1-7/14/30 days) chart with Omzet/Items toggle
             const daily = aggregateDaily(dailyRangeDays);
+            // Expose for breakdown toggles and reset breakdown cache
+            window.lastDailyAgg = daily;
+            window.dailyBreakdownCache = {};
             const maxAmt = Math.max(1, ...daily.map(d => d.amount));
             const maxItems = Math.max(1, ...daily.map(d => d.items));
             const todayIdx = daily.length - 1;
@@ -1666,16 +1669,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${[...daily].reverse().slice(0, Math.min(daily.length, 10)).map(d => {
+                                ${[...daily].map((d,i)=>({d,i})).reverse().slice(0, Math.min(daily.length, 10)).map(({d,i}) => {
                                     const avg = d.orders ? Math.round(d.amount / d.orders) : 0;
                                     const top = d.top || '-';
-                                    return `<tr>
-                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\" title=\"${d.full}\">${d.label}</td>
+                                    return `
+                                    <tr id=\"daily-row-${i}\">
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; white-space:nowrap;\" title=\"${d.full}\">
+                                            <button onclick=\"toggleDailyBreakdown(${i})\" class=\"tab-btn\" style=\"padding:2px 8px; font-size:0.8rem; margin-right:6px;\">▾</button>${d.label}
+                                        </td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; color:var(--sand-500); font-weight:800\">${formatRupiah(d.amount)}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.orders}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.items}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${formatRupiah(avg)}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${top}</td>
+                                    </tr>
+                                    <tr id=\"daily-breakdown-${i}\" style=\"display:none; background:#F8FAF9;\">
+                                        <td colspan=\"6\" style=\"padding:10px 6px; border-bottom:1px dashed #eef2f7;\">
+                                            <div id=\"daily-breakdown-body-${i}\" style=\"padding:6px 6px;\"></div>
+                                        </td>
                                     </tr>`;
                                 }).join('')}
                             </tbody>
@@ -1808,6 +1819,95 @@
             if (cs) cs.classList.add('hidden');
             if (ct) ct.textContent = 'Add customer name';
             updatePaymentSection(calculateCurrentTotal());
+        }
+
+        // Daily product breakdown helpers (expandable rows)
+        window.dailyBreakdownCache = {};
+
+        function getDayRangeByIndex(i) {
+            const d = (window.lastDailyAgg && window.lastDailyAgg[i]) ? window.lastDailyAgg[i].date : null;
+            if (!d) return null;
+            const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+            const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+            return { start, end };
+        }
+
+        function computeDailyBreakdown(i) {
+            if (window.dailyBreakdownCache[i]) return window.dailyBreakdownCache[i];
+            const range = getDayRangeByIndex(i);
+            if (!range) return [];
+            const { start, end } = range;
+            const map = new Map();
+            const orders = orderQueue.filter(o => {
+                if (o.status !== 'completed') return false;
+                const t = new Date(o.timestamp);
+                return t >= start && t <= end;
+            });
+            orders.forEach(o => {
+                o.items.forEach(it => {
+                    const key = it.productId;
+                    const prev = map.get(key) || { name: it.productName, qty: 0, total: 0 };
+                    const q = it.quantity || 0;
+                    prev.qty += q;
+                    prev.total += (it.price || 0) * q;
+                    map.set(key, prev);
+                });
+            });
+            const arr = Array.from(map.values()).sort((a,b) => b.qty - a.qty);
+            window.dailyBreakdownCache[i] = arr;
+            return arr;
+        }
+
+        function renderBars(items, cap = 10) {
+            if (!items || !items.length) return '<div class="empty-order">No sales this day</div>';
+            const maxQty = Math.max(1, ...items.map(it => it.qty));
+            const list = items.slice(0, cap);
+            return list.map(it => {
+                const w = Math.round((it.qty / maxQty) * 100);
+                return `
+                    <div class="bar-row">
+                        <div class="bar-label" title="${it.name}">${it.name}</div>
+                        <div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div>
+                        <div class="bar-meta">${it.qty} | ${formatRupiah(it.total)}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderDailyBreakdown(i, showAll = false) {
+            const items = computeDailyBreakdown(i);
+            const body = document.getElementById(`daily-breakdown-body-${i}`);
+            if (!body) return;
+            const cap = showAll ? items.length : 10;
+            const content = `
+                <div>
+                    ${renderBars(items, cap)}
+                    ${items.length > 10 ? `<div style="margin-top:8px; text-align:right;"><button class="tab-btn" style="padding:4px 8px; font-size:.8rem" onclick="toggleDailyShowAll(${i})">${showAll ? 'Show less' : 'Show all'}</button></div>` : ''}
+                </div>`;
+            body.innerHTML = content;
+        }
+
+        window._dailyExpanded = {};
+        window._dailyShowAll = {};
+        function toggleDailyBreakdown(i) {
+            const tr = document.getElementById(`daily-breakdown-${i}`);
+            const btn = document.querySelector(`#daily-row-${i} button`);
+            if (!tr) return;
+            const expanded = tr.style.display !== 'none';
+            if (expanded) {
+                tr.style.display = 'none';
+                if (btn) btn.textContent = '▾';
+                window._dailyExpanded[i] = false;
+            } else {
+                tr.style.display = '';
+                if (btn) btn.textContent = '▴';
+                window._dailyExpanded[i] = true;
+                renderDailyBreakdown(i, !!window._dailyShowAll[i]);
+            }
+        }
+
+        function toggleDailyShowAll(i) {
+            window._dailyShowAll[i] = !window._dailyShowAll[i];
+            renderDailyBreakdown(i, !!window._dailyShowAll[i]);
         }
 
         function confirmFinish(orderId) {
