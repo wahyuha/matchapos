@@ -12,29 +12,46 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Matcha-safe modern palette */
-            --matcha-900: #1F3D2B;
-            --matcha-800: #2D5016; /* deep leaf */
-            --matcha-700: #3E6B43;
-            --matcha-600: #4A7C59; /* primary */
-            --matcha-500: #6EA67F;
-            --matcha-400: #7FB069; /* accent */
-            --matcha-300: #A7D7C5; /* soft tint */
-            --matcha-200: #D9EEE6; /* surface tint */
-            --matcha-100: #F3FBF8; /* background */
+            /* Fresh, clean, flat palette */
+            /* Brand */
+            --brand-900: #163A2A;
+            --brand-800: #1E4B36;
+            --brand-700: #2C5E46;
+            --brand-600: #376E54; /* primary */
+            --brand-500: #4C8A6B;
+            --brand-400: #67A885; /* accent */
+            --brand-300: #9CD2B9; /* soft tint */
+            --brand-200: #D7F0E5; /* surface tint */
+            --brand-100: #F4FBF8; /* background */
 
-            --sand-500: #D4A574; /* secondary accent */
+            /* Neutral */
+            --ink-900: #0F172A;
             --ink-700: #2C2C2C;
+            --ink-600: #374151;
             --ink-500: #6B7280;
+            --ink-400: #9CA3AF;
             --ink-300: #CBD5E1;
+            --ink-200: #E5E7EB;
+            --ink-100: #F3F4F6;
             --white: #FFFFFF;
+
+            /* Status */
+            --success-500: #22C55E;
+            --warning-500: #F59E0B;
+            --danger-500: #EF4444;
+
+            /* Surfaces */
+            --surface-bg: var(--brand-100);
+            --surface-card: var(--white);
+            --surface-muted: #F8FAF9;
+            --border-subtle: #E6EBE8;
 
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
-            --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
-            --shadow-md: 0 10px 24px rgba(0,0,0,0.10);
-            --shadow-lg: 0 16px 40px rgba(0,0,0,0.14);
+            --shadow-sm: 0 4px 12px rgba(15,23,42,0.06);
+            --shadow-md: 0 10px 24px rgba(15,23,42,0.10);
+            --shadow-lg: 0 16px 40px rgba(15,23,42,0.14);
         }
         * {
             margin: 0;
@@ -44,7 +61,7 @@
 
         body {
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
-            background: linear-gradient(160deg, var(--matcha-100) 0%, var(--matcha-200) 100%);
+            background: var(--surface-bg);
             color: var(--ink-700);
             min-height: 100vh;
             overflow-x: hidden;
@@ -53,7 +70,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            background: var(--brand-600);
             color: var(--white);
             padding: 18px 24px;
             box-shadow: var(--shadow-md);
@@ -171,7 +188,7 @@
         }
 
         .panel-header {
-            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            background: var(--brand-600);
             color: var(--white);
             padding: 18px 20px;
             text-align: center;
@@ -201,7 +218,7 @@
         }
 
         .product-card {
-            background: var(--matcha-100);
+            background: var(--brand-100);
             border: 2px solid transparent;
             border-radius: var(--radius-md);
             padding: 16px;
@@ -215,21 +232,21 @@
         }
 
         .product-card:hover {
-            border-color: var(--matcha-400);
+            border-color: var(--brand-400);
             transform: translateY(-2px);
             box-shadow: var(--shadow-sm);
         }
 
         .product-card.selected {
-            border-color: var(--matcha-600);
-            background: var(--matcha-200);
+            border-color: var(--brand-600);
+            background: var(--brand-200);
             box-shadow: inset 0 0 0 2px rgba(74,124,89,0.15);
         }
 
         .product-image {
             width: 68px;
             height: 164px;
-            background: linear-gradient(135deg, var(--matcha-400), var(--matcha-300));
+            background: var(--brand-200);
             border-radius: 50%;
             margin: 0 auto 12px;
             display: flex;
@@ -241,14 +258,14 @@
 
         .product-name {
             font-weight: 700;
-            color: var(--matcha-800);
+            color: var(--brand-800);
             font-size: 1rem;
             margin-bottom: 4px;
             line-height: 1.2;
         }
 
         .product-price {
-            color: var(--sand-500);
+            color: var(--brand-500);
             font-weight: 700;
             font-size: 1rem;
             margin-bottom: 10px;
@@ -262,12 +279,12 @@
         }
 
         .qty-btn {
-            background: var(--matcha-600);
+            background: var(--brand-600);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 999px;
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
             cursor: pointer;
             font-size: 1.1rem;
             display: flex;
@@ -276,27 +293,27 @@
             transition: transform .15s ease, background .15s ease;
         }
 
-        .qty-btn:hover { background: var(--matcha-500); transform: scale(1.06); }
+        .qty-btn:hover { background: var(--brand-500); transform: scale(1.06); }
 
         .qty-btn:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; transform: none; }
 
         .qty-display {
             font-weight: 800;
-            min-width: 28px;
+            min-width: 24px;
             text-align: center;
             font-size: 1.05rem;
-            color: var(--matcha-800);
+            color: var(--brand-800);
         }
 
         .order-summary {
-            background: var(--matcha-100);
-            border-top: 3px solid var(--matcha-400);
+            background: var(--brand-100);
+            border-top: 3px solid var(--brand-400);
             padding: 20px;
         }
 
         .order-title {
             font-size: 1.15rem;
-            color: var(--matcha-800);
+            color: var(--brand-800);
             margin-bottom: 14px;
             text-align: center;
             font-weight: 800;
@@ -316,7 +333,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 0;
-            border-bottom: 1px dashed var(--matcha-300);
+            border-bottom: 1px dashed var(--border-subtle);
         }
 
         .order-item:last-child {
@@ -327,14 +344,14 @@
             flex: 1;
         }
 
-        .item-name { font-weight: 700; color: var(--matcha-800); font-size: 0.95rem; }
+        .item-name { font-weight: 700; color: var(--brand-800); font-size: 0.95rem; }
 
         .item-price { color: var(--ink-500); font-size: 0.85rem; }
 
-        .item-total { font-weight: 800; color: var(--sand-500); font-size: 0.95rem; }
+        .item-total { font-weight: 800; color: var(--brand-500); font-size: 0.95rem; }
 
         .order-total {
-            background: var(--matcha-600);
+            background: var(--brand-600);
             color: var(--white);
             padding: 14px 16px;
             border-radius: var(--radius-md);
@@ -349,14 +366,14 @@
         .customer-input {
             width: 100%;
             padding: 12px 14px;
-            border: 2px solid var(--matcha-300);
+            border: 2px solid var(--border-subtle);
             border-radius: var(--radius-sm);
             margin-bottom: 14px;
             font-size: 1rem;
             background: var(--white);
         }
 
-        .customer-input:focus { outline: none; border-color: var(--matcha-600); box-shadow: 0 0 0 3px rgba(110,166,127,0.25); }
+        .customer-input:focus { outline: none; border-color: var(--brand-600); box-shadow: 0 0 0 3px rgba(55,110,84,0.25); }
 
         .summary-panel { display: flex; flex-direction: column; }
 
@@ -366,7 +383,7 @@
             background: #fff;
             padding-top: 6px;
             padding-bottom: 6px;
-            border-top: 1px solid var(--matcha-200);
+            border-top: 1px solid var(--border-subtle);
         }
 
         .payment-section {
@@ -374,14 +391,14 @@
             border-radius: var(--radius-md);
             padding: 10px;
             margin-bottom: 8px;
-            border: 2px solid var(--matcha-300);
+            border: 2px solid var(--border-subtle);
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             gap: 8px;
         }
 
-        .payment-title { font-weight: 800; color: var(--matcha-800); margin: 0; font-size: .95rem; flex: 0 0 auto; }
+        .payment-title { font-weight: 800; color: var(--brand-800); margin: 0; font-size: .95rem; flex: 0 0 auto; }
 
         .denomination-buttons {
             display: flex;
@@ -394,28 +411,28 @@
         }
 
         .denom-btn {
-            background: var(--matcha-100);
-            border: 2px solid var(--matcha-300);
+            background: var(--brand-100);
+            border: 2px solid var(--border-subtle);
             padding: 8px 10px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 700;
-            color: var(--matcha-800);
+            color: var(--brand-800);
             transition: background .12s ease, color .12s ease, border-color .12s ease, transform .12s ease;
             white-space: nowrap;
         }
 
         .denom-btn:hover, .denom-btn.suggested, .denom-btn.selected {
-            background: var(--matcha-400);
+            background: var(--brand-400);
             color: var(--white);
-            border-color: var(--matcha-600);
+            border-color: var(--brand-600);
         }
 
         .payment-input {
             width: auto;
             padding: 8px 10px;
-            border: 2px solid var(--matcha-300);
+            border: 2px solid var(--border-subtle);
             border-radius: var(--radius-sm);
             font-size: 1.05rem;
             text-align: center;
@@ -424,7 +441,7 @@
         }
 
         .change-display {
-            background: var(--sand-500);
+            background: var(--brand-500);
             color: var(--white);
             padding: 8px 10px;
             border-radius: var(--radius-sm);
@@ -434,26 +451,26 @@
             flex: 0 0 auto;
         }
 
+        .change-display.insufficient {
+            background: #dc3545;
+        }
+
         .exact-btn {
             background: #F0F7F4;
-            border: 2px dashed var(--matcha-300);
+            border: 2px dashed var(--border-subtle);
             padding: 8px 10px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 700;
-            color: var(--matcha-800);
+            color: var(--brand-800);
             margin: 0;
             flex: 0 0 auto;
         }
         .exact-btn.selected {
-            background: var(--matcha-400);
+            background: var(--brand-400);
             color: #fff;
-            border-color: var(--matcha-600);
-        }
-
-        .change-display.insufficient {
-            background: #dc3545;
+            border-color: var(--brand-600);
         }
 
         .action-buttons { display: flex; gap: 10px; }
@@ -473,11 +490,14 @@
 
         .btn-clear:hover { background: #5a6268; }
 
-        .btn-print { background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400)); color: white; }
+        .btn-print { background: var(--brand-600); color: white; }
 
         .btn-print:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(74, 124, 89, 0.26); }
 
         .btn:disabled { background: #e9ecef; color: #6c757d; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .cancel-btn { background: #dc3545; color: #fff; }
+        .finish-btn { background: #28a745; color: #fff; }
 
         /* Right Panel - Order Queue (wider) */
         .queue-panel {
@@ -491,7 +511,7 @@
         }
 
         .queue-header {
-            background: linear-gradient(135deg, var(--sand-500), var(--matcha-400));
+            background: var(--brand-700);
             color: var(--white);
             padding: 18px 20px;
             text-align: center;
@@ -527,8 +547,8 @@
         }
 
         .queue-item {
-            background: var(--matcha-100);
-            border-left: 4px solid var(--matcha-300);
+            background: var(--brand-100);
+            border-left: 4px solid var(--border-subtle);
             border-radius: var(--radius-sm);
             padding: 14px;
             margin-bottom: 10px;
@@ -550,15 +570,15 @@
             margin-bottom: 10px;
         }
 
-        .order-id { font-weight: 800; color: var(--matcha-800); }
+        .order-id { font-weight: 800; color: var(--brand-800); }
 
         .order-time { font-size: 0.8rem; color: var(--ink-500); }
 
-        .customer-name { font-size: 0.95rem; color: var(--matcha-600); margin-bottom: 8px; font-weight: 700; }
+        .customer-name { font-size: 0.95rem; color: var(--brand-600); margin-bottom: 8px; font-weight: 700; }
 
         .queue-items { font-size: 0.9rem; color: var(--ink-500); margin-bottom: 10px; }
 
-        .queue-total { font-weight: 800; color: var(--sand-500); margin-bottom: 10px; }
+        .queue-total { font-weight: 800; color: var(--brand-500); margin-bottom: 10px; }
 
         .status-buttons {
             display: flex;
@@ -668,7 +688,7 @@
             justify-content: flex-end;
         }
         .primary-action {
-            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            background: var(--brand-600);
             color: #fff;
             border: none;
             padding: 12px 18px;
@@ -677,6 +697,34 @@
             cursor: pointer;
             box-shadow: 0 6px 16px rgba(74,124,89,.25);
         }
+
+        /* Big Actions (Home quick actions) */
+        .big-action-panel { display: block; }
+        .big-actions-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: stretch;
+            height: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .big-primary {
+            width: 100%;
+            flex: 0.9 auto;
+            font-size: 1.35rem;
+            background: var(--brand-600);
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 900;
+            letter-spacing: .01em;
+            box-shadow: 0 10px 24px rgba(74,124,89,.28);
+            transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+        }
+        .big-primary:hover { background: var(--brand-500); transform: translateY(-1px); box-shadow: 0 12px 28px rgba(74,124,89,.32); }
+        .big-primary:active { transform: translateY(0); }
         .summary-panel {
             flex: 0 0 45%;
             background: var(--white);
@@ -686,110 +734,41 @@
             flex-direction: column;
             overflow: hidden;
             padding: 20px;
-            border-left: 4px solid var(--matcha-400);
+            border-left: 4px solid var(--brand-400);
         }
         .customer-toggle { margin-top: 8px; text-align: center; }
-        .customer-toggle button { background: transparent; color: #2D5016; border: none; text-decoration: underline; cursor: pointer; font-weight: 600; }
+        .customer-toggle button { background: transparent; color: var(--brand-800); border: none; text-decoration: underline; cursor: pointer; font-weight: 600; }
         .tabs {
             display: flex;
             gap: 8px;
             margin-top: 10px;
             justify-content: center;
+            display: none;
         }
         .tab-btn {
             padding: 8px 12px;
-            border: 2px solid #A7D7C5;
+            border: 2px solid var(--border-subtle);
             background: #F0F7F4;
-            color: #2D5016;
+            color: var(--brand-800);
             border-radius: 20px;
             font-weight: 600;
             cursor: pointer;
         }
         .tab-btn.active {
-            background: #7FB069;
+            background: var(--brand-600);
             color: #fff;
-            border-color: #4A7C59;
+            border-color: var(--brand-600);
         }
-
-        /* Hide legacy tabs (navigation moved to stats) */
-        .tabs { display: none; }
-        .finish-btn {
-            background: #28a745;
-            color: #fff;
-        }
-        .cancel-btn { background: #dc3545; color: #fff; }
-        /* Subtle variant for queue items */
-        .cancel-btn.subtle {
-            background: transparent;
-            color: #dc3545;
-            border: 2px dashed #f5c2c7;
-            opacity: 0.7;
-        }
-        .cancel-btn.subtle:hover { opacity: 1; background: #fff0f1; }
-        .confirm-modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.45);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-        }
-        .confirm-content {
-            background: #fff;
-            padding: 20px;
-            border-radius: var(--radius-lg);
-            width: 320px;
-            text-align: center;
-            box-shadow: var(--shadow-lg);
-        }
-        .confirm-actions { display:flex; gap:10px; margin-top: 15px; }
-        .confirm-yes { flex:1; background:#28a745; color:#fff; font-weight:800; padding:10px; border:none; border-radius:8px; }
-        .confirm-no { flex:1; background:#e9ecef; color:#2D5016; padding:10px; border:none; border-radius:8px; }
-
-        /* Big action side panel */
-        .big-action-panel {
-            flex: 0 0 25%;
-            display: flex;
-            align-items: stretch;
-            justify-content: stretch;
-        }
-        .big-primary {
-            width: 100%;
-            flex: 1 1 auto;
-            font-size: 2rem;
-            line-height: 1.2;
-            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
-            color: #fff;
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 12px 28px rgba(74,124,89,.35);
-            cursor: pointer;
-            font-weight: 900;
-            letter-spacing: -0.01em;
-        }
-
-        /* Actions stack and secondary button */
-        .big-actions-stack {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: stretch;
-            height: 100%;
-        }
+        
         .big-secondary {
             width: 100%;
             padding: 16px;
             font-size: 1.1rem;
-            background: #F0F7F4;
-            color: var(--matcha-800);
-            border: 2px solid var(--matcha-300);
+            border: 2px solid var(--border-subtle);
             border-radius: 14px;
             cursor: pointer;
             font-weight: 800;
         }
-
         /* Stats page */
         .stats-panel {
             flex: 1 1 auto;
@@ -803,7 +782,7 @@
             margin: 0 auto;
         }
         .stats-header {
-            background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400));
+            background: var(--brand-600);
             color: #fff;
             padding: 16px 20px;
             display: flex;
@@ -811,22 +790,22 @@
             align-items: center;
         }
         .stats-content { padding: 16px; overflow-y:auto; }
-        .card { background:#F8FFFB; border:2px solid var(--matcha-300); border-radius:12px; padding:12px; margin-bottom:12px; }
+        .card { background:#F8FFFB; border:2px solid var(--border-subtle); border-radius:12px; padding:12px; margin-bottom:12px; }
         .bar-row { display:flex; align-items:center; gap:8px; margin:6px 0; }
-        .bar-label { flex: 0 0 180px; font-weight:700; color: var(--matcha-800); }
+        .bar-label { flex: 0 0 180px; font-weight:700; color: var(--brand-800); }
         .bar-track { flex:1; background:#e9f6f0; height:14px; border-radius:999px; overflow:hidden; }
-        .bar-fill { height:100%; background: linear-gradient(135deg, var(--matcha-600), var(--matcha-400)); }
-        .bar-meta { flex: 0 0 160px; text-align:right; font-weight:700; color: var(--sand-500); }
+        .bar-fill { height:100%; background: var(--brand-600); }
+        .bar-meta { flex: 0 0 160px; text-align:right; font-weight:700; color: var(--brand-500); }
 
         /* Product image support */
-        .product-image { display:flex; align-items:center; justify-content:center; background:#F0F7F4; border:2px solid var(--matcha-200); border-radius:12px; overflow:hidden; width:100%; aspect-ratio:9/16; font-size:2rem; }
+        .product-image { display:flex; align-items:center; justify-content:center; background:#F0F7F4; border:2px solid var(--border-subtle); border-radius:12px; overflow:hidden; width:100%; aspect-ratio:9/16; font-size:2rem; }
         .product-image img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
 
         /* Time bucket bars */
-        .time-card-title { font-weight:800; color: var(--matcha-800); margin-bottom:6px }
+        .time-card-title { font-weight:800; color: var(--brand-800); margin-bottom:6px }
         .time-bars { display:flex; gap:6px; align-items:flex-end; height:140px; }
-        .time-bar { width: 32px; background: var(--matcha-400); border-radius:6px 6px 0 0; position:relative; }
-        .time-bar.highlight { background: var(--matcha-600); box-shadow: 0 0 0 2px rgba(74,124,89,0.15); }
+        .time-bar { width: 32px; background: var(--brand-400); border-radius:6px 6px 0 0; position:relative; }
+        .time-bar.highlight { background: var(--brand-600); box-shadow: 0 0 0 2px rgba(74,124,89,0.15); }
         .time-axis { display:flex; gap:6px; font-size:10px; color:#777; margin-top:6px; overflow-x:auto; }
         .time-tick { width:32px; text-align:center; white-space:nowrap; }
 
@@ -836,6 +815,50 @@
         /* Motion safety */
         @media (prefers-reduced-motion: reduce) {
             * { transition: none !important; animation: none !important; }
+        }
+
+        /* Confirm modal */
+        .confirm-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: none; /* toggled to flex by JS */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        .confirm-content {
+            background: #fff;
+            border: 2px solid var(--border-subtle);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg, 0 12px 24px rgba(0,0,0,0.12));
+            padding: 16px;
+            min-width: 280px;
+            max-width: 440px;
+            width: 100%;
+        }
+        .confirm-actions { display: flex; gap: 10px; margin-top: 12px; }
+        .confirm-yes {
+            flex: 1;
+            background: var(--brand-600);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .confirm-yes:hover { background: var(--brand-500); }
+        .confirm-no {
+            flex: 1;
+            background: #F8FAF9;
+            color: var(--brand-800);
+            border: 2px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-weight: 800;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -910,9 +933,9 @@
                     <input type="text" class="customer-input" id="customerName" placeholder="Customer name (optional)">
                 </div>
                 <div class="action-buttons">
-                    <button class="btn cancel-btn" onclick="cancelOrder()">Cancel</button>
-                    <button class="btn btn-clear" onclick="clearOrder()">Clear</button>
-                    <button class="btn btn-print" id="printBtn" onclick="processOrder()" disabled>Complete Order</button>
+                    <button class="btn cancel-btn" onclick="cancelOrder()">Batal</button>
+                    <button class="btn btn-clear" onclick="clearOrder()">Hapus</button>
+                    <button class="btn btn-print" id="printBtn" onclick="processOrder()" disabled>Pesan</button>
                 </div>
             </div>
         </div>
@@ -920,13 +943,13 @@
         <div class="big-action-panel hidden" id="bigActionPanel">
             <div class="big-actions-stack">
                 <button class="big-primary" onclick="showOrderForm()">+ Add New Order</button>
-                <button class="big-secondary" onclick="showStatsPage()">Tampilkan Penjualan</button>
+                <button class="big-secondary" onclick="showStatsPage()">🤑 Tampilkan Penjualan</button>
             </div>
         </div>
 
         <div class="queue-panel" id="queuePanel">
             <div class="queue-header">
-                <h2>Order Queue</h2>
+                <h2>Pesanan</h2>
                 <div class="tabs">
                     <button class="tab-btn active" id="tab-in_progress" onclick="setQueueTab('in_progress')">In Progress</button>
                     <button class="tab-btn" id="tab-completed" onclick="setQueueTab('completed')">Completed</button>
@@ -985,7 +1008,7 @@
             // Note: image file uses 'ube' while product key is 'ubi'
             "ubi_cream_matcha": { name: "Ubi Cream Matcha Latte", price: 15000, emoji: "🍠", image: "asstes/images/matcha-ube-cream.jpg" },
             // No image available in asstes/images, fallback to emoji
-            "choco_cream_matcha": { name: "Choco Cream Matcha", price: 15000, emoji: "🍫" }
+            // "choco_cream_matcha": { name: "Choco Cream Matcha", price: 15000, emoji: "🍫" }
         };
 
         const DENOMINATIONS = [15000, 20000, 25000, 50000, 100000];
@@ -1465,8 +1488,8 @@
                         <div class="queue-total">${formatRupiah(order.total)}</div>
                         ${selectedQueueTab === 'in_progress' ? `
                         <div class="status-buttons">
-                            <button class="btn finish-btn" onclick="confirmFinish('${order.id}')">Finish</button>
-                            <button class="btn cancel-btn subtle" onclick="confirmCancel('${order.id}')">Cancel</button>
+                            <button class="btn finish-btn" onclick="confirmFinish('${order.id}')">Selesaikan</button>
+                            <button class="btn subtle" onclick="confirmCancel('${order.id}')">Batal</button>
                         </div>` : ''}
                     `;
                     container.appendChild(div);
@@ -1553,14 +1576,14 @@
             html += `
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div style="font-weight:800; color:var(--matcha-800)">Total Omzet</div>
-                        <div style="font-weight:900; color:var(--sand-500); font-size:1.2rem">${formatRupiah(omzet)}</div>
+                        <div style="font-weight:800; color:var(--brand-800)">Total Omzet</div>
+                        <div style="font-weight:900; color:var(--brand-500); font-size:1.2rem">${formatRupiah(omzet)}</div>
                     </div>
                     <div style="margin-top:6px; color:#666">Items terjual: <strong>${totalItems}</strong></div>
                 </div>`;
 
             html += `<div class="card">
-                        <div style="font-weight:800; color:var(--matcha-800); margin-bottom:6px">Most Selling Items</div>`;
+                        <div style="font-weight:800; color:var(--brand-800); margin-bottom:6px">Most Selling Items</div>`;
             if (!items.length) {
                 html += `<div style="color:#666; font-style:italic">Belum ada penjualan hari ini</div>`;
             } else {
@@ -1626,7 +1649,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
                         <div class="time-card-title">Ringkasan Harian <span id="metricTitle">(${dailyMetric==='items'?'Items':'Omzet'})</span>${deltaBadge}</div>
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
-                            <div style="background:#F0F7F4; border:2px solid var(--matcha-300); border-radius:999px; overflow:hidden; display:flex;">
+                            <div style="background:#F0F7F4; border:2px solid var(--border-subtle); border-radius:999px; overflow:hidden; display:flex;">
                                 <button onclick="setDailyMetric('omzet')" class="tab-btn ${dailyMetric==='omzet'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Omzet</button>
                                 <button onclick="setDailyMetric('items')" class="tab-btn ${dailyMetric==='items'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Items</button>
                             </div>
@@ -1659,7 +1682,7 @@
                     <div style="margin-top:10px; overflow:auto">
                         <table style="width:100%; border-collapse:collapse; font-size:12px;">
                             <thead>
-                                <tr style="text-align:left; color:var(--matcha-800)">
+                                <tr style="text-align:left; color:var(--brand-800)">
                                     <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Date</th>
                                     <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Omzet</th>
                                     <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Orders</th>
@@ -1677,7 +1700,7 @@
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; white-space:nowrap;\" title=\"${d.full}\">
                                             <button onclick=\"toggleDailyBreakdown(${i})\" class=\"tab-btn\" style=\"padding:2px 8px; font-size:0.8rem; margin-right:6px;\">▾</button>${d.label}
                                         </td>
-                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; color:var(--sand-500); font-weight:800\">${formatRupiah(d.amount)}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; color:var(--brand-500); font-weight:800\">${formatRupiah(d.amount)}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.orders}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.items}</td>
                                         <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${formatRupiah(avg)}</td>
@@ -1984,10 +2007,10 @@
     <!-- Confirm Finish Modal -->
     <div class="confirm-modal" id="confirmModal">
         <div class="confirm-content">
-            <div>Mark this order as Completed?</div>
+            <div>Selesaikan pesanan ini?</div>
             <div class="confirm-actions">
-                <button id="confirmYes" class="confirm-yes">Yes</button>
-                <button id="confirmNo" class="confirm-no">No</button>
+                <button id="confirmYes" class="confirm-yes">Ya</button>
+                <button id="confirmNo" class="confirm-no">Tidak</button>
             </div>
         </div>
     </div>
