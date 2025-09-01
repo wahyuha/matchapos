@@ -825,10 +825,10 @@
         /* Time bucket bars */
         .time-card-title { font-weight:800; color: var(--matcha-800); margin-bottom:6px }
         .time-bars { display:flex; gap:6px; align-items:flex-end; height:140px; }
-        .time-bar { width: 10px; background: var(--matcha-400); border-radius:6px 6px 0 0; position:relative; }
+        .time-bar { width: 32px; background: var(--matcha-400); border-radius:6px 6px 0 0; position:relative; }
         .time-bar.highlight { background: var(--matcha-600); box-shadow: 0 0 0 2px rgba(74,124,89,0.15); }
         .time-axis { display:flex; gap:6px; font-size:10px; color:#777; margin-top:6px; overflow-x:auto; }
-        .time-tick { width:10px; text-align:center; white-space:nowrap; }
+        .time-tick { width:32px; text-align:center; white-space:nowrap; }
 
         /* Focus states for accessibility & speed */
         button:focus-visible, input:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(110,166,127,0.35); }
@@ -1602,21 +1602,50 @@
             html += `</div>
                 </div>`;
 
-            // Daily range (1-7 days) omzet bar chart
-            const daily = aggregateDailyOmzet(dailyRangeDays);
+            // Daily range (1-7/14/30 days) chart with Omzet/Items toggle
+            const daily = aggregateDaily(dailyRangeDays);
             const maxAmt = Math.max(1, ...daily.map(d => d.amount));
+            const maxItems = Math.max(1, ...daily.map(d => d.items));
+            const todayIdx = daily.length - 1;
+            // KPIs (today)
+            const todayDaily = daily[todayIdx] || { amount: 0, items: 0, orders: 0 };
+            const yesterdayDaily = (daily.length >= 2) ? daily[daily.length - 2] : null;
+            const deltaAmt = (yesterdayDaily && yesterdayDaily.amount > 0)
+                ? Math.round(((todayDaily.amount - yesterdayDaily.amount) / yesterdayDaily.amount) * 100)
+                : null;
+            const cancelledToday = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'cancelled').length;
+            const avgTicket = todayDaily.orders ? Math.round(todayDaily.amount / todayDaily.orders) : 0;
+            const deltaBadge = (deltaAmt === null)
+                ? ''
+                : `<span style="margin-left:8px; font-size:.85rem; font-weight:800; ${deltaAmt>=0?'color:#28a745':'color:#dc3545'}">${deltaAmt>=0?'▲':'▼'} ${Math.abs(deltaAmt)}%</span>`;
             html += `
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-                        <div class="time-card-title">Ringkasan Harian (Omzet)</div>
-                        <div>
-                            ${[1,2,3,4,5,6,7].map(n => `<button onclick="setDailyRange(${n})" class="tab-btn ${n===dailyRangeDays?'active':''}" style="padding:6px 10px; font-size:0.85rem;">${n} hari</button>`).join(' ')}
+                        <div class="time-card-title">Ringkasan Harian <span id="metricTitle">(${dailyMetric==='items'?'Items':'Omzet'})</span>${deltaBadge}</div>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
+                            <div style="background:#F0F7F4; border:2px solid var(--matcha-300); border-radius:999px; overflow:hidden; display:flex;">
+                                <button onclick="setDailyMetric('omzet')" class="tab-btn ${dailyMetric==='omzet'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Omzet</button>
+                                <button onclick="setDailyMetric('items')" class="tab-btn ${dailyMetric==='items'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Items</button>
+                            </div>
+                            <div>
+                                ${[1,2,3,4,5,6,7,14,30].map(n => `<button onclick=\"setDailyRange(${n})\" class=\"tab-btn ${n===dailyRangeDays?'active':''}\" style=\"padding:6px 10px; font-size:0.85rem;\">${n} hari</button>`).join(' ')}
+                            </div>
                         </div>
                     </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:32px">
+                        <span style="background:#e9f6f0; border:1px solid #A7D7C5; border-radius:10px; padding:6px 10px; font-weight:800; color:#2D5016">Orders: ${todayDaily.orders}</span>
+                        <span style="background:#e9f6f0; border:1px solid #A7D7C5; border-radius:10px; padding:6px 10px; font-weight:800; color:#2D5016">Items: ${todayDaily.items}</span>
+                        <span style="background:#e9f6f0; border:1px solid #A7D7C5; border-radius:10px; padding:6px 10px; font-weight:800; color:#2D5016">Avg Order: ${formatRupiah(avgTicket)}</span>
+                        <span style="background:#fff0f1; border:1px solid #f5c2c7; border-radius:10px; padding:6px 10px; font-weight:800; color:#dc3545">Cancelled: ${cancelledToday}</span>
+                    </div>
                     <div class="time-bars">`;
-            daily.forEach(d => {
-                const h = maxAmt ? Math.round((d.amount / maxAmt) * 100) : 0;
-                html += `<div class="time-bar" title="${d.label}: ${formatRupiah(d.amount)}" style="height:${Math.max(4,h)}%"></div>`;
+            daily.forEach((d, idx) => {
+                const value = dailyMetric === 'items' ? d.items : d.amount;
+                const maxVal = dailyMetric === 'items' ? maxItems : maxAmt;
+                const h = maxVal ? Math.round((value / maxVal) * 100) : 0;
+                const isTodayBar = idx === todayIdx;
+                const label = dailyMetric === 'items' ? (value + 'x') : formatRupiah(value);
+                html += `<div class="time-bar ${isTodayBar ? 'highlight' : ''}" title="${d.label}: ${label}" style="height:${Math.max(4,h)}%">${`<div style=\"position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:10px; color:#2D5016; font-weight:800; white-space:nowrap;\">${label}</div>`}</div>`;
             });
             html += `</div>
                     <div class="time-axis">`;
@@ -1624,6 +1653,34 @@
                 html += `<div class="time-tick" title="${d.full}">${d.label}</div>`;
             });
             html += `</div>
+                    <div style="margin-top:10px; overflow:auto">
+                        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                            <thead>
+                                <tr style="text-align:left; color:var(--matcha-800)">
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Date</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Omzet</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Orders</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Items</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Avg Order</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Top Item</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${[...daily].reverse().slice(0, Math.min(daily.length, 10)).map(d => {
+                                    const avg = d.orders ? Math.round(d.amount / d.orders) : 0;
+                                    const top = d.top || '-';
+                                    return `<tr>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\" title=\"${d.full}\">${d.label}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; color:var(--sand-500); font-weight:800\">${formatRupiah(d.amount)}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.orders}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.items}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${formatRupiah(avg)}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${top}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>`;
 
             content.innerHTML = html;
@@ -1655,9 +1712,10 @@
             return buckets;
         }
 
-        // Daily omzet aggregation for last N days (including today)
+        // Daily aggregation for last N days (including today)
         let dailyRangeDays = 7;
-        function aggregateDailyOmzet(days) {
+        let dailyMetric = 'omzet'; // 'omzet' | 'items'
+        function aggregateDaily(days) {
             const now = new Date();
             const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1), 0, 0, 0, 0);
             const oneDay = 24 * 60 * 60 * 1000;
@@ -1665,21 +1723,36 @@
             for (let i = 0; i < days; i++) {
                 const dayStart = new Date(start.getTime() + i * oneDay);
                 const dayEnd = new Date(dayStart.getTime() + oneDay - 1);
-                const amount = orderQueue
-                    .filter(o => {
-                        const t = new Date(o.timestamp);
-                        return o.status === 'completed' && t >= dayStart && t <= dayEnd;
-                    })
-                    .reduce((sum, o) => sum + (o.total || 0), 0);
+                const orders = orderQueue.filter(o => {
+                    const t = new Date(o.timestamp);
+                    return o.status === 'completed' && t >= dayStart && t <= dayEnd;
+                });
+                const amount = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+                const items = orders.reduce((sum, o) => sum + o.items.reduce((s, it) => s + (it.quantity || 0), 0), 0);
+                const itemMap = new Map();
+                orders.forEach(o => o.items.forEach(it => {
+                    const prev = itemMap.get(it.productId) || { name: it.productName, qty: 0 };
+                    prev.qty += (it.quantity || 0);
+                    itemMap.set(it.productId, prev);
+                }));
+                let top = null;
+                if (itemMap.size) {
+                    top = Array.from(itemMap.values()).sort((a,b) => b.qty - a.qty)[0].name;
+                }
                 const dd = pad2(dayStart.getDate());
                 const mm = pad2(dayStart.getMonth() + 1);
-                result.push({ date: dayStart, label: `${dd}/${mm}`, full: `${dd}/${mm}/${dayStart.getFullYear()}`, amount });
+                result.push({ date: dayStart, label: `${dd}/${mm}`, full: `${dd}/${mm}/${dayStart.getFullYear()}`, amount, items, orders: orders.length, top });
             }
             return result;
         }
 
         function setDailyRange(n) {
             dailyRangeDays = n;
+            renderStatsPage();
+        }
+
+        function setDailyMetric(metric) {
+            dailyMetric = metric === 'items' ? 'items' : 'omzet';
             renderStatsPage();
         }
 
