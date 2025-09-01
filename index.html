@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matchaboy POS - The Best Matcha is Here</title>
+    <title>Matchaboy POS - Best Matcha Here</title>
     <meta name="theme-color" content="#4A7C59">
     <link rel="manifest" href="manifest.webmanifest">
     <!-- Modern typography -->
@@ -848,7 +848,7 @@
                     <h1>🍃 Matchaboy - Wanayasa</h1>
                     <div class="brand-info">
                         Jl. Wanayasa, Purwakarta, Jawa Barat | @matchaboy<br>
-                        "The best Matcha is here"
+                        "Best Matcha Here"
                     </div>
                 </div>
             </div>
@@ -971,7 +971,7 @@
             name: "Matchaboy - Wanayasa",
             address: "Jl. Wanayasa, Purwakarta, Jawa Barat",
             instagram: "@matchaboy",
-            tagline: "The best Matcha is here"
+            tagline: "Best Matcha Here"
         };
 
         const PRODUCTS = {
@@ -1366,7 +1366,7 @@
             lines.push(`CHANGE    : ${formatRupiah(order.payment.change)}`);
             lines.push('--------------------------------');
             lines.push('Thank you!');
-            lines.push('The best Matcha is here');
+            lines.push('Best Matcha Here');
             lines.push('\n\n\n');
             return lines.join('\n');
         }
@@ -1590,7 +1590,7 @@
                 const ratio = maxBucket ? (b.count / maxBucket) : 0; // 0..1
                 const light = Math.max(30, Math.min(80, Math.round(80 - ratio * 40))); // 80% (low) -> 40% (high)
                 const color = `hsl(140, 60%, ${light}%)`;
-                html += `<div class="time-bar ${hi ? 'highlight' : ''}" title="${b.label}: ${b.count}" style="height:${Math.max(4,h)}%; background:${color}"></div>`;
+                html += `<div class="time-bar ${hi ? 'highlight' : ''}" title="${b.label}: ${b.count}" style="height:${Math.max(4,h)}%; background:${color}">${`<div style=\"position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:10px; color:#2D5016; font-weight:800; white-space:nowrap;\">${b.count}</div>`}</div>`;
             });
             html += `</div>
                     <div class="time-axis">`;
