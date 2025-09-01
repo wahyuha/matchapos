@@ -1469,8 +1469,10 @@
         function renderQueue() {
             const container = document.getElementById('queueContent');
             container.innerHTML = '';
-
-            const filtered = orderQueue.filter(o => o.status === selectedQueueTab);
+            // Only show today's items in Completed tab; others show all
+            const filtered = selectedQueueTab === 'completed'
+                ? orderQueue.filter(o => o.status === 'completed' && isToday(o.timestamp))
+                : orderQueue.filter(o => o.status === selectedQueueTab);
             if (!filtered.length) {
                 container.innerHTML = '<div class="empty-queue">No orders in queue</div>';
             } else {
