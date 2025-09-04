@@ -1501,7 +1501,7 @@
             // Update stats
             document.getElementById('inProgressOrders').textContent = orderQueue.filter(o => o.status === 'in_progress').length;
             document.getElementById('readyOrders').textContent = orderQueue.filter(o => o.status === 'completed' && isToday(o.timestamp)).length;
-            document.getElementById('cancelledOrders').textContent = orderQueue.filter(o => o.status === 'cancelled').length;
+            document.getElementById('cancelledOrders').textContent = orderQueue.filter(o => o.status === 'cancelled' && isToday(o.timestamp)).length;
 
             // Update today omzet
             const todayEl = document.getElementById('todayOmzet');
@@ -1601,13 +1601,25 @@
             }
             html += `</div>`;
 
-            // Time buckets (30-minute intervals)
-            const buckets = aggregateTodayBuckets30m();
+            // Time buckets (30-minute intervals) — supports historical day selection
+            const targetDate = selectedBucketsDate || new Date();
+            const isTodaySelected = isSameDay(targetDate, new Date());
+            const buckets = aggregateBuckets30m(targetDate);
             const maxBucket = Math.max(0, ...buckets.map(b => b.count));
             const peak = buckets.reduce((p, b) => (b.count > p.count ? b : p), { count: -1 });
             html += `
                 <div class="card">
-                    <div class="time-card-title">Penjualan per 30 Menit ${peak.count >= 0 ? `(Puncak: ${peak.label} — ${peak.count} item)` : ''}</div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap">
+                        <div class="time-card-title">Penjualan per 30 Menit ${peak.count >= 0 ? `(Puncak: ${peak.label} — ${peak.count} item)` : ''}
+                            <span style="margin-left:8px; font-size:.85rem; color:#2D5016; font-weight:800">${formatDisplayDate(targetDate)}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px">
+                            <button class="tab-btn" title="Previous day" style="padding:6px 10px; font-size:.85rem" onclick="shiftBucketDate(-1)">◀</button>
+                            <button class="tab-btn" title="Today" style="padding:6px 10px; font-size:.85rem" onclick="setBucketDateToToday()">Hari ini</button>
+                            <input type="date" id="bucketDateInput" value="${formatDateForInput(targetDate)}" max="${formatDateForInput(new Date())}" onchange="onBucketDateChange(this.value)" style="padding:6px 10px; border:2px solid var(--border-subtle); border-radius:10px; font-weight:600" />
+                            <button class="tab-btn" title="Next day" style="padding:6px 10px; font-size:.85rem" onclick="shiftBucketDate(1)" ${isTodaySelected ? 'disabled' : ''}>▶</button>
+                        </div>
+                    </div>
                     <div class="time-bars">`;
             buckets.forEach(b => {
                 const h = maxBucket ? Math.round((b.count / maxBucket) * 100) : 0;
@@ -1673,7 +1685,7 @@
                 const h = maxVal ? Math.round((value / maxVal) * 100) : 0;
                 const isTodayBar = idx === todayIdx;
                 const label = dailyMetric === 'items' ? (value + 'x') : formatRupiah(value);
-                html += `<div class="time-bar ${isTodayBar ? 'highlight' : ''}" title="${d.label}: ${label}" style="height:${Math.max(4,h)}%">${`<div style=\"position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:10px; color:#2D5016; font-weight:800; white-space:nowrap;\">${label}</div>`}</div>`;
+                html += `<div class="time-bar ${isTodayBar ? 'highlight' : ''}" title="${d.label}: ${label}" style="height:${Math.max(4,h)}%" onclick="setBucketDateByMillis(${d.date.getTime()})">${`<div style=\"position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:10px; color:#2D5016; font-weight:800; white-space:nowrap;\">${label}</div>`}</div>`;
             });
             html += `</div>
                     <div class="time-axis">`;
@@ -1724,10 +1736,67 @@
 
         function pad2(n){ return n.toString().padStart(2,'0'); }
 
+        // Helpers for date handling and 30-min buckets
+        function isSameDay(a, b) {
+            return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        }
+
+        function startOfDay(d) {
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+        }
+
+        function formatDateForInput(d) {
+            const yyyy = d.getFullYear();
+            const mm = pad2(d.getMonth() + 1);
+            const dd = pad2(d.getDate());
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function formatDisplayDate(d) {
+            const today = new Date();
+            if (isSameDay(d, today)) return 'Hari ini';
+            const day = pad2(d.getDate());
+            const mon = pad2(d.getMonth() + 1);
+            const yr = d.getFullYear();
+            return `${day}/${mon}/${yr}`;
+        }
+
+        function onBucketDateChange(value) {
+            if (!value) return;
+            const [yyyy, mm, dd] = value.split('-').map(Number);
+            const d = new Date(yyyy, (mm || 1) - 1, dd || 1, 12, 0, 0, 0);
+            selectedBucketsDate = d;
+            renderStatsPage();
+        }
+
+        function setBucketDateToToday() {
+            selectedBucketsDate = new Date();
+            renderStatsPage();
+        }
+
+        function setBucketDateByMillis(ms) {
+            const d = new Date(ms);
+            selectedBucketsDate = d;
+            renderStatsPage();
+        }
+
+        function shiftBucketDate(deltaDays) {
+            const base = selectedBucketsDate || new Date();
+            const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + (deltaDays || 0), 12, 0, 0, 0);
+            selectedBucketsDate = d;
+            renderStatsPage();
+        }
+
         function aggregateTodayBuckets30m() {
+            // Backwards compatibility: calls generalized version with today
             const now = new Date();
-            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0); // 09:00 (static)
-            const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 21, 0, 0, 0); // 21:00 (static)
+            return aggregateBuckets30m(now);
+        }
+
+        function aggregateBuckets30m(day) {
+            const base = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+            const start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 9, 0, 0, 0); // 09:00 (static)
+            const end = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 21, 0, 0, 0); // 21:00 (static)
             const msPerBucket = 30 * 60 * 1000;
             const bucketCount = Math.floor((end - start) / msPerBucket); // fixed 24 buckets
             const buckets = Array.from({ length: bucketCount }, (_, i) => {
@@ -1736,10 +1805,13 @@
                 return { start: s, end: e, label: `${pad2(s.getHours())}:${pad2(s.getMinutes())}-${pad2(e.getHours())}:${pad2(e.getMinutes())}`, count: 0 };
             });
 
-            const todayCompleted = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'completed');
-            todayCompleted.forEach(o => {
+            const dayCompleted = orderQueue.filter(o => {
+                if (o.status !== 'completed') return false;
                 const t = new Date(o.timestamp);
-                if (t < start || t >= end) return; // keep within [09:00, 21:00)
+                return t >= start && t < end && isSameDay(t, base);
+            });
+            dayCompleted.forEach(o => {
+                const t = new Date(o.timestamp);
                 const idx = Math.floor((t - start) / msPerBucket);
                 const itemsCount = o.items.reduce((s, it) => s + (it.quantity || 0), 0);
                 if (buckets[idx]) buckets[idx].count += itemsCount;
@@ -1751,6 +1823,8 @@
         // Daily aggregation for last N days (including today)
         let dailyRangeDays = 7;
         let dailyMetric = 'omzet'; // 'omzet' | 'items'
+        // Selected date for 30-min buckets view (defaults to today)
+        let selectedBucketsDate = null; // Date or null
         function aggregateDaily(days) {
             const now = new Date();
             const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1), 0, 0, 0, 0);
