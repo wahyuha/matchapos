@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matcha POS - Data Migration</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        
+        .status-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+        
+        .status-info {
+            color: #4a5568;
+            margin: 5px 0;
+        }
+        
+        .migration-button {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+        
+        .migration-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+        }
+        
+        .migration-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #edf2f7;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #68d391);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .log-container {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .log-success { color: #68d391; }
+        .log-error { color: #fc8181; }
+        .log-warning { color: #fbb040; }
+        .log-info { color: #63b3ed; }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            background: #f0fff4;
+            color: #22543d;
+            border-left-color: #48bb78;
+        }
+        
+        .alert-error {
+            background: #fff5f5;
+            color: #742a2a;
+            border-left-color: #f56565;
+        }
+        
+        .alert-warning {
+            background: #fffaf0;
+            color: #744210;
+            border-left-color: #ed8936;
+        }
+        
+        .data-preview {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .data-preview pre {
+            margin: 0;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍃 Matcha POS Data Migration</h1>
+        
+        <div class="status-card">
+            <div class="status-title">Current Data Status</div>
+            <div class="status-info" id="localStorage-status">Checking localStorage...</div>
+            <div class="status-info" id="indexeddb-status">Checking IndexedDB...</div>
+        </div>
+        
+        <div id="data-preview-container" style="display: none;">
+            <div class="status-title">Data Preview (First 5 orders)</div>
+            <div class="data-preview">
+                <pre id="data-preview"></pre>
+            </div>
+        </div>
+        
+        <button class="migration-button" id="migrateBtn" onclick="startMigration()">
+            📦 Backup Data to IndexedDB
+        </button>
+        <button class="migration-button" id="syncSupabaseBtn" onclick="startSyncToSupabase()">
+            ☁️ Sync IndexedDB → Supabase (Bulk)
+        </button>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div id="migration-result"></div>
+        
+        <div class="log-container" id="logContainer">
+            <div id="logEntries"></div>
+        </div>
+    </div>
+
+    <script>
+        class DataMigrationTool {
+            constructor() {
+                this.db = null;
+                this.localStorageKey = 'matchaboy_orders';
+                this.dbName = 'MatchaPOS';
+                this.dbVersion = 1;
+                // Supabase configuration (mirrors index.html)
+                this.SUPABASE_URL = 'https://vzujuzkhhqibzrpimcvw.supabase.co';
+                this.SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6dWp1emtoaHFpYnpycGltY3Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDk5MTgsImV4cCI6MjA3MjcyNTkxOH0.7Oe_LdApNRb-5zKBHUnqslWksoZ3LJfUqLAJMOmrZFQ';
+                this.table_name = 'orders_dev';
+                this.init();
+            }
+            
+            async init() {
+                await this.initIndexedDB();
+                this.checkDataStatus();
+            }
+            
+            async initIndexedDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.dbVersion);
+                    
+                    request.onerror = () => {
+                        this.log('Failed to open IndexedDB', 'error');
+                        reject(request.error);
+                    };
+                    
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        this.log('IndexedDB initialized successfully', 'success');
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // Create orders store
+                        if (!db.objectStoreNames.contains('orders')) {
+                            const orderStore = db.createObjectStore('orders', { keyPath: 'id' });
+                            orderStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            orderStore.createIndex('status', 'status', { unique: false });
+                        }
+                        
+                        // Create metadata store
+                        if (!db.objectStoreNames.contains('metadata')) {
+                            db.createObjectStore('metadata', { keyPath: 'key' });
+                        }
+                        
+                        this.log('IndexedDB schema created', 'info');
+                    };
+                });
+            }
+            
+            checkDataStatus() {
+                // Check localStorage
+                const localData = localStorage.getItem(this.localStorageKey);
+                const localStatus = document.getElementById('localStorage-status');
+                
+                if (localData) {
+                    try {
+                        const parsedData = JSON.parse(localData);
+                        const orderCount = parsedData.orderQueue ? parsedData.orderQueue.length : 0;
+                        localStatus.textContent = `✅ Found ${orderCount} orders in localStorage`;
+                        localStatus.style.color = '#22543d';
+                        
+                        // Show data preview
+                        this.showDataPreview(parsedData);
+                        
+                    } catch (error) {
+                        localStatus.textContent = '❌ Invalid data format in localStorage';
+                        localStatus.style.color = '#742a2a';
+                        this.log('Invalid localStorage data format', 'error');
+                    }
+                } else {
+                    localStatus.textContent = '⚠️ No data found in localStorage';
+                    localStatus.style.color = '#744210';
+                    document.getElementById('migrateBtn').disabled = true;
+                }
+                
+                // Check IndexedDB
+                this.checkIndexedDBStatus();
+            }
+            
+            async checkIndexedDBStatus() {
+                const indexedDBStatus = document.getElementById('indexeddb-status');
+                
+                try {
+                    const count = await this.getOrderCount();
+                    if (count > 0) {
+                        indexedDBStatus.textContent = `✅ ${count} orders already backed up in IndexedDB`;
+                        indexedDBStatus.style.color = '#22543d';
+                    } else {
+                        indexedDBStatus.textContent = '📦 IndexedDB ready for backup';
+                        indexedDBStatus.style.color = '#2d3748';
+                    }
+                } catch (error) {
+                    indexedDBStatus.textContent = '❌ IndexedDB not available';
+                    indexedDBStatus.style.color = '#742a2a';
+                    document.getElementById('migrateBtn').disabled = true;
+                }
+            }
+            
+            showDataPreview(data) {
+                const previewContainer = document.getElementById('data-preview-container');
+                const previewElement = document.getElementById('data-preview');
+                
+                if (data.orderQueue && data.orderQueue.length > 0) {
+                    const preview = data.orderQueue.slice(0, 5).map(order => ({
+                        id: order.id,
+                        timestamp: order.timestamp,
+                        total: order.total,
+                        status: order.status,
+                        items: order.items.length + ' items'
+                    }));
+                    
+                    previewElement.textContent = JSON.stringify(preview, null, 2);
+                    previewContainer.style.display = 'block';
+                }
+            }
+            
+            async getOrderCount() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['orders'], 'readonly');
+                    const store = transaction.objectStore('orders');
+                    const request = store.count();
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            async getAllOrders() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['orders'], 'readonly');
+                    const store = transaction.objectStore('orders');
+                    const request = store.openCursor();
+                    const results = [];
+                    request.onsuccess = (e) => {
+                        const cursor = e.target.result;
+                        if (cursor) {
+                            results.push(cursor.value);
+                            cursor.continue();
+                        } else {
+                            resolve(results);
+                        }
+                    };
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            // Bulk insert method - more efficient
+            async supabaseInsertBulk(orders) {
+                const url = `${this.SUPABASE_URL}/rest/v1/${this.table_name}`;
+                
+                const payload = orders.map(order => ({
+                    order_id: order.id,
+                    timestamp: order.timestamp,
+                    customer_name: order.customerName || null,
+                    items: order.items,
+                    subtotal: order.subtotal || 0,
+                    tax: order.tax || 0,
+                    total: order.total || 0,
+                    payment: order.payment,
+                    status: order.status,
+                    notes: order.notes || null,
+                    synced: true
+                }));
+
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': this.SUPABASE_KEY,
+                        'Authorization': `Bearer ${this.SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload) // Send array of objects
+                });
+            }
+
+            // Keep the single insert method for fallback
+            async supabaseInsertOrder(order) {
+                const url = `${this.SUPABASE_URL}/rest/v1/${this.table_name}`;
+                const payload = {
+                    order_id: order.id,
+                    timestamp: order.timestamp,
+                    customer_name: order.customerName || null,
+                    items: order.items,
+                    subtotal: order.subtotal || 0,
+                    tax: order.tax || 0,
+                    total: order.total || 0,
+                    payment: order.payment,
+                    status: order.status,
+                    notes: order.notes || null,
+                    synced: true
+                };
+                
+                return fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': this.SUPABASE_KEY,
+                        'Authorization': `Bearer ${this.SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            // Updated sync method using bulk inserts
+            async startSyncToSupabase() {
+                const syncBtn = document.getElementById('syncSupabaseBtn');
+                const progressBar = document.getElementById('progressBar');
+                const logContainer = document.getElementById('logContainer');
+
+                // Disable button and show progress
+                syncBtn.disabled = true;
+                syncBtn.textContent = '⏳ Syncing to Supabase...';
+                progressBar.style.display = 'block';
+                logContainer.style.display = 'block';
+
+                this.clearResult();
+                this.log('Starting bulk sync from IndexedDB to Supabase...', 'info');
+
+                try {
+                    const orders = await this.getAllOrders();
+                    if (!orders || orders.length === 0) {
+                        throw new Error('No orders found in IndexedDB to sync');
+                    }
+                    
+                    this.log(`Found ${orders.length} orders in IndexedDB`, 'info');
+                    this.updateProgress(5);
+
+                    const batchSize = 100; // Increased batch size for bulk inserts
+                    let processed = 0;
+                    let successfulBatches = 0;
+                    let failedOrders = 0;
+                    const totalBatches = Math.ceil(orders.length / batchSize);
+
+                    for (let i = 0; i < orders.length; i += batchSize) {
+                        const batch = orders.slice(i, i + batchSize);
+                        const batchNumber = Math.floor(i / batchSize) + 1;
+                        
+                        try {
+                            this.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} orders)`, 'info');
+                            const res = await this.supabaseInsertBulk(batch);
+                            
+                            if (!res.ok) {
+                                // If bulk insert fails, try individual inserts as fallback
+                                this.log(`Bulk insert failed for batch ${batchNumber}, trying individual inserts...`, 'warning');
+                                
+                                let batchFailures = 0;
+                                for (const order of batch) {
+                                    try {
+                                        const individualRes = await this.supabaseInsertOrder(order);
+                                        if (!individualRes.ok) {
+                                            const errorText = await individualRes.text();
+                                            throw new Error(`HTTP ${individualRes.status}: ${errorText}`);
+                                        }
+                                    } catch (e) {
+                                        batchFailures++;
+                                        this.log(`❌ Failed syncing order ${order.id}: ${e.message}`, 'error');
+                                    }
+                                }
+                                
+                                failedOrders += batchFailures;
+                                if (batchFailures < batch.length) {
+                                    this.log(`✅ Batch ${batchNumber} partially completed: ${batch.length - batchFailures}/${batch.length} orders synced`, 'warning');
+                                }
+                            } else {
+                                successfulBatches++;
+                                this.log(`✅ Successfully synced batch ${batchNumber} (${batch.length} orders)`, 'success');
+                            }
+                            
+                        } catch (e) {
+                            this.log(`❌ Failed syncing batch ${batchNumber}: ${e.message}`, 'error');
+                            failedOrders += batch.length;
+                        }
+                        
+                        processed += batch.length;
+                        const progress = 5 + (processed / orders.length) * 90;
+                        this.updateProgress(progress);
+                    }
+
+                    this.updateProgress(100);
+                    const successfulOrders = orders.length - failedOrders;
+                    const summary = `Completed sync: ${successfulOrders} success, ${failedOrders} failed (${successfulBatches}/${totalBatches} batches successful)`;
+                    this.log(summary, failedOrders === 0 ? 'success' : 'warning');
+                    this.showResult(failedOrders === 0 ? 'success' : 'warning', `☁️ ${summary}`);
+                    
+                } catch (error) {
+                    this.log(`Sync failed: ${error.message}`, 'error');
+                    this.showResult('error', `❌ Sync failed: ${error.message}`);
+                } finally {
+                    syncBtn.disabled = false;
+                    syncBtn.textContent = '☁️ Sync IndexedDB → Supabase (Bulk)';
+                }
+            }
+
+            async startMigration() {
+                const migrateBtn = document.getElementById('migrateBtn');
+                const progressBar = document.getElementById('progressBar');
+                const logContainer = document.getElementById('logContainer');
+                
+                // Disable button and show progress
+                migrateBtn.disabled = true;
+                migrateBtn.textContent = '⏳ Migrating Data...';
+                progressBar.style.display = 'block';
+                logContainer.style.display = 'block';
+                
+                this.clearResult();
+                this.log('Starting data migration...', 'info');
+                
+                try {
+                    // Get localStorage data
+                    const localData = localStorage.getItem(this.localStorageKey);
+                    const parsedData = JSON.parse(localData);
+                    const orders = parsedData.orderQueue || [];
+                    
+                    this.log(`Found ${orders.length} orders to migrate`, 'info');
+                    this.updateProgress(10);
+                    
+                    if (orders.length === 0) {
+                        throw new Error('No orders found to migrate');
+                    }
+                    
+                    // Save to IndexedDB in batches
+                    const batchSize = 50;
+                    let processed = 0;
+                    
+                    for (let i = 0; i < orders.length; i += batchSize) {
+                        const batch = orders.slice(i, i + batchSize);
+                        await this.saveBatch(batch);
+                        
+                        processed += batch.length;
+                        const progress = 10 + (processed / orders.length) * 80;
+                        this.updateProgress(progress);
+                        this.log(`Processed ${processed}/${orders.length} orders`, 'info');
+                    }
+                    
+                    // Save metadata
+                    await this.saveMetadata(parsedData);
+                    this.updateProgress(95);
+                    
+                    // Verify data
+                    const finalCount = await this.getOrderCount();
+                    this.updateProgress(100);
+                    
+                    this.log(`Migration completed! ${finalCount} orders backed up`, 'success');
+                    this.showResult('success', `✅ Successfully backed up ${finalCount} orders to IndexedDB!`);
+                    
+                    // Update status
+                    this.checkDataStatus();
+                    
+                } catch (error) {
+                    this.log(`Migration failed: ${error.message}`, 'error');
+                    this.showResult('error', `❌ Migration failed: ${error.message}`);
+                } finally {
+                    migrateBtn.disabled = false;
+                    migrateBtn.textContent = '📦 Backup Data to IndexedDB';
+                }
+            }
+            
+            async saveBatch(orders) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['orders'], 'readwrite');
+                    const store = transaction.objectStore('orders');
+                    
+                    transaction.oncomplete = () => resolve();
+                    transaction.onerror = () => reject(transaction.error);
+                    
+                    orders.forEach(order => {
+                        // Add backup timestamp
+                        const backupOrder = {
+                            ...order,
+                            backed_up_at: new Date().toISOString(),
+                            original_source: 'localStorage'
+                        };
+                        store.put(backupOrder);
+                    });
+                });
+            }
+            
+            async saveMetadata(originalData) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['metadata'], 'readwrite');
+                    const store = transaction.objectStore('metadata');
+                    
+                    const metadata = {
+                        key: 'migration_info',
+                        migration_date: new Date().toISOString(),
+                        original_data_size: JSON.stringify(originalData).length,
+                        order_count: originalData.orderQueue ? originalData.orderQueue.length : 0,
+                        current_order: originalData.currentOrder || {},
+                        version: '1.0'
+                    };
+                    
+                    const request = store.put(metadata);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            updateProgress(percent) {
+                const progressFill = document.getElementById('progressFill');
+                progressFill.style.width = percent + '%';
+            }
+            
+            log(message, type = 'info') {
+                const logEntries = document.getElementById('logEntries');
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${type}`;
+                logEntry.textContent = `[${timestamp}] ${message}`;
+                logEntries.appendChild(logEntry);
+                logEntries.scrollTop = logEntries.scrollHeight;
+            }
+            
+            showResult(type, message) {
+                const resultContainer = document.getElementById('migration-result');
+                resultContainer.className = `alert alert-${type}`;
+                resultContainer.textContent = message;
+                resultContainer.style.display = 'block';
+            }
+            
+            clearResult() {
+                const resultContainer = document.getElementById('migration-result');
+                resultContainer.style.display = 'none';
+                
+                const logEntries = document.getElementById('logEntries');
+                logEntries.innerHTML = '';
+            }
+        }
+        
+        // Initialize the migration tool
+        let migrationTool;
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            migrationTool = new DataMigrationTool();
+        });
+        
+        function startMigration() {
+            migrationTool.startMigration();
+        }
+        function startSyncToSupabase() {
+            migrationTool.startSyncToSupabase();
+        }
+    </script>
+</body>
+</html>
