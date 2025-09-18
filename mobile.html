@@ -1,0 +1,2467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Matchaboy POS - Best Matcha Here</title>
+    <meta name="theme-color" content="#4A7C59">
+    <link rel="manifest" href="manifest.webmanifest">
+    <!-- Modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Fresh, clean, flat palette */
+            /* Brand */
+            --brand-900: #163A2A;
+            --brand-800: #1E4B36;
+            --brand-700: #2C5E46;
+            --brand-600: #376E54; /* primary */
+            --brand-500: #4C8A6B;
+            --brand-400: #67A885; /* accent */
+            --brand-300: #9CD2B9; /* soft tint */
+            --brand-200: #D7F0E5; /* surface tint */
+            --brand-100: #F4FBF8; /* background */
+
+            /* Neutral */
+            --ink-900: #0F172A;
+            --ink-700: #2C2C2C;
+            --ink-600: #374151;
+            --ink-500: #6B7280;
+            --ink-400: #9CA3AF;
+            --ink-300: #CBD5E1;
+            --ink-200: #E5E7EB;
+            --ink-100: #F3F4F6;
+            --white: #FFFFFF;
+
+            /* Status */
+            --success-500: #22C55E;
+            --warning-500: #F59E0B;
+            --danger-500: #EF4444;
+
+            /* Surfaces */
+            --surface-bg: var(--brand-100);
+            --surface-card: var(--white);
+            --surface-muted: #F8FAF9;
+            --border-subtle: #E6EBE8;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 4px 12px rgba(15,23,42,0.06);
+            --shadow-md: 0 10px 24px rgba(15,23,42,0.10);
+            --shadow-lg: 0 16px 40px rgba(15,23,42,0.14);
+
+            /* Mobile-first touch targets */
+            --touch-target: 48px;
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji';
+            background: var(--surface-bg);
+            color: var(--ink-700);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Mobile-first header - more compact */
+        .header {
+            background: var(--brand-600);
+            color: var(--white);
+            padding: var(--spacing-sm);
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+            max-width: 100%;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .brand h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            margin-bottom: 2px;
+        }
+
+        .brand-info {
+            font-size: 0.75rem;
+            opacity: 0.9;
+            line-height: 1.3;
+        }
+
+        .header-right {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .print-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.14);
+            padding: 6px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .printer-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.14);
+            padding: 6px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+            font-size: 0.8rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220,53,69,0.15);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .connect-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 6px 10px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+        }
+
+        .connect-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Mobile-first main container */
+        .main-container {
+            padding: var(--spacing-sm);
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Mobile-first order panel */
+        .order-panel {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--spacing-md);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: var(--brand-600);
+            color: var(--white);
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        .panel-header h2 {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+
+        .panel-header p {
+            opacity: 0.9;
+            font-size: 0.85rem;
+        }
+
+        /* Mobile-optimized product grid */
+        .products-section {
+            padding: var(--spacing-md);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .product-card {
+            background: var(--brand-100);
+            border: 2px solid transparent;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            text-align: center;
+            cursor: pointer;
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:hover {
+            border-color: var(--brand-400);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .product-card.selected {
+            border-color: var(--brand-600);
+            background: var(--brand-200);
+            box-shadow: inset 0 0 0 2px rgba(74,124,89,0.15);
+        }
+
+        .product-image {
+            width: 50px;
+            height: 80px;
+            background: var(--brand-200);
+            border-radius: 8px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: inset 0 -4px 8px rgba(0,0,0,0.05);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 6px;
+        }
+
+        .product-name {
+            font-weight: 700;
+            color: var(--brand-800);
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            color: var(--brand-500);
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .qty-btn {
+            background: var(--brand-600);
+            color: white;
+            border: none;
+            width: var(--touch-target);
+            height: var(--touch-target);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .15s ease, background .15s ease;
+            font-weight: bold;
+        }
+
+        .qty-btn:hover { 
+            background: var(--brand-500); 
+            transform: scale(1.06); 
+        }
+
+        .qty-btn:disabled { 
+            background: #e5e7eb; 
+            color: #9ca3af; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+
+        .qty-display {
+            font-weight: 800;
+            min-width: 24px;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--brand-800);
+        }
+
+        /* Mobile-optimized summary panel */
+        .summary-panel {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-md);
+            border-left: 4px solid var(--brand-400);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .order-title {
+            font-size: 1.1rem;
+            color: var(--brand-800);
+            margin-bottom: var(--spacing-sm);
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .order-items {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: var(--spacing-sm);
+            min-height: 100px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-subtle);
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name { 
+            font-weight: 700; 
+            color: var(--brand-800); 
+            font-size: 0.9rem; 
+        }
+
+        .item-price { 
+            color: var(--ink-500); 
+            font-size: 0.8rem; 
+        }
+
+        .item-total { 
+            font-weight: 800; 
+            color: var(--brand-500); 
+            font-size: 0.9rem; 
+        }
+
+        .order-total {
+            background: var(--brand-600);
+            color: var(--white);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            margin-bottom: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Mobile-optimized payment section */
+        .payment-section {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+            border: 2px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .payment-title { 
+            font-weight: 800; 
+            color: var(--brand-800); 
+            margin: 0; 
+            font-size: 0.9rem; 
+            text-align: center;
+        }
+
+        .payment-row {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            flex-wrap: wrap;
+        }
+
+        .denomination-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-xs);
+            width: 100%;
+            margin: var(--spacing-xs) 0;
+        }
+
+        .denom-btn {
+            background: var(--brand-100);
+            border: 2px solid var(--border-subtle);
+            padding: var(--spacing-xs);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--brand-800);
+            transition: background .12s ease, color .12s ease, border-color .12s ease, transform .12s ease;
+            white-space: nowrap;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .denom-btn:hover, .denom-btn.suggested, .denom-btn.selected {
+            background: var(--brand-400);
+            color: var(--white);
+            border-color: var(--brand-600);
+        }
+
+        .payment-input {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            text-align: center;
+            margin: var(--spacing-xs) 0;
+            min-height: var(--touch-target);
+        }
+
+        .payment-input:focus {
+            outline: none;
+            border-color: var(--brand-600);
+            box-shadow: 0 0 0 3px rgba(55,110,84,0.25);
+        }
+
+        .exact-btn {
+            background: #F0F7F4;
+            border: 2px dashed var(--border-subtle);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand-800);
+            width: 100%;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .exact-btn.selected {
+            background: var(--brand-400);
+            color: #fff;
+            border-color: var(--brand-600);
+        }
+
+        .change-display {
+            background: var(--brand-500);
+            color: var(--white);
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            font-weight: 800;
+            box-shadow: var(--shadow-sm);
+            width: 100%;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .change-display.insufficient {
+            background: #dc3545;
+        }
+
+        .customer-input {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--spacing-sm);
+            font-size: 1rem;
+            background: var(--white);
+            min-height: var(--touch-target);
+        }
+
+        .customer-input:focus { 
+            outline: none; 
+            border-color: var(--brand-600); 
+            box-shadow: 0 0 0 3px rgba(55,110,84,0.25); 
+        }
+
+        .customer-toggle { 
+            margin: var(--spacing-sm) 0; 
+            text-align: center; 
+        }
+
+        .customer-toggle button { 
+            background: transparent; 
+            color: var(--brand-800); 
+            border: none; 
+            text-decoration: underline; 
+            cursor: pointer; 
+            font-weight: 600; 
+            padding: var(--spacing-xs);
+            min-height: var(--touch-target);
+        }
+
+        /* Mobile-optimized action buttons */
+        .action-buttons { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 2fr;
+            gap: var(--spacing-sm); 
+        }
+
+        .btn {
+            padding: var(--spacing-md);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-clear { 
+            background: #6c757d; 
+            color: white; 
+        }
+
+        .btn-clear:hover { 
+            background: #5a6268; 
+        }
+
+        .btn-print { 
+            background: var(--brand-600); 
+            color: white; 
+        }
+
+        .btn-print:hover { 
+            transform: translateY(-1px); 
+            box-shadow: 0 8px 18px rgba(74, 124, 89, 0.26); 
+        }
+
+        .btn:disabled { 
+            background: #e9ecef; 
+            color: #6c757d; 
+            cursor: not-allowed; 
+            transform: none; 
+            box-shadow: none; 
+        }
+
+        .cancel-btn { 
+            background: #dc3545; 
+            color: #fff; 
+        }
+
+        .finish-btn { 
+            background: #28a745; 
+            color: #fff; 
+        }
+
+        /* Mobile-optimized queue panel */
+        .queue-panel {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .queue-header {
+            background: var(--brand-700);
+            color: var(--white);
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+
+        .queue-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-sm);
+        }
+
+        .stat {
+            text-align: center;
+            cursor: pointer;
+            padding: var(--spacing-xs);
+            border-radius: var(--radius-sm);
+            transition: background 0.2s ease;
+        }
+
+        .stat:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stat.active .stat-number { 
+            text-decoration: underline; 
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        .queue-content {
+            padding: var(--spacing-md);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .queue-item {
+            background: var(--brand-100);
+            border-left: 4px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+            transition: background .12s ease, transform .12s ease, box-shadow .12s ease;
+        }
+
+        .queue-item.new { border-left-color: #ffc107; }
+        .queue-item.in-progress { border-left-color: #007bff; }
+        .queue-item.ready { border-left-color: #28a745; }
+        .queue-item.completed { border-left-color: #6c757d; opacity: 0.7; }
+
+        .queue-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .order-id { 
+            font-weight: 800; 
+            color: var(--brand-800); 
+        }
+
+        .order-time { 
+            font-size: 0.8rem; 
+            color: var(--ink-500); 
+        }
+
+        .customer-name { 
+            font-size: 0.9rem; 
+            color: var(--brand-600); 
+            margin-bottom: var(--spacing-xs); 
+            font-weight: 700; 
+        }
+
+        .queue-items { 
+            font-size: 0.85rem; 
+            color: var(--ink-500); 
+            margin-bottom: var(--spacing-xs); 
+            line-height: 1.4;
+        }
+
+        .queue-total { 
+            font-weight: 800; 
+            color: var(--brand-500); 
+            margin-bottom: var(--spacing-sm); 
+        }
+
+        .status-buttons {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-xs);
+        }
+
+        .status-btn {
+            padding: var(--spacing-sm);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .12s ease, background .12s ease;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-btn.new {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-btn.in-progress {
+            background: #007bff;
+            color: white;
+        }
+
+        .status-btn.ready {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-btn.completed {
+            background: #6c757d;
+            color: white;
+        }
+
+        .empty-queue { 
+            text-align: center; 
+            color: var(--ink-500); 
+            font-style: italic; 
+            padding: var(--spacing-xl); 
+        }
+
+        .empty-order { 
+            text-align: center; 
+            color: var(--ink-500); 
+            font-style: italic; 
+            padding: var(--spacing-md); 
+        }
+
+        /* Mobile-optimized big actions */
+        .big-action-panel { 
+            display: block; 
+        }
+
+        .big-actions-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            align-items: stretch;
+            height: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .big-primary {
+            width: 100%;
+            min-height: 80px;
+            font-size: 1.25rem;
+            background: var(--brand-600);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-weight: 900;
+            letter-spacing: .01em;
+            box-shadow: 0 10px 24px rgba(74,124,89,.28);
+            transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .big-primary:hover { 
+            background: var(--brand-500); 
+            transform: translateY(-1px); 
+            box-shadow: 0 12px 28px rgba(74,124,89,.32); 
+        }
+
+        .big-primary:active { 
+            transform: translateY(0); 
+        }
+
+        .big-secondary {
+            width: 100%;
+            padding: var(--spacing-md);
+            min-height: 60px;
+            font-size: 1rem;
+            border: 2px solid var(--border-subtle);
+            background: var(--white);
+            color: var(--brand-800);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Stats panel mobile optimization */
+        .stats-panel {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin: var(--spacing-sm);
+        }
+
+        .stats-header {
+            background: var(--brand-600);
+            color: #fff;
+            padding: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+        }
+
+        .stats-content { 
+            padding: var(--spacing-md); 
+            overflow-y: auto; 
+            max-height: calc(100vh - 200px);
+        }
+
+        .card { 
+            background: #F8FFFB; 
+            border: 2px solid var(--border-subtle); 
+            border-radius: var(--radius-md); 
+            padding: var(--spacing-md); 
+            margin-bottom: var(--spacing-md); 
+        }
+
+        .bar-row { 
+            display: flex; 
+            align-items: center; 
+            gap: var(--spacing-xs); 
+            margin: 6px 0; 
+            font-size: 0.85rem;
+        }
+
+        .bar-label { 
+            flex: 0 0 120px; 
+            font-weight: 700; 
+            color: var(--brand-800); 
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .bar-track { 
+            flex: 1; 
+            background: #e9f6f0; 
+            height: 12px; 
+            border-radius: 999px; 
+            overflow: hidden; 
+        }
+
+        .bar-fill { 
+            height: 100%; 
+            background: var(--brand-600); 
+        }
+
+        .bar-meta { 
+            flex: 0 0 80px; 
+            text-align: right; 
+            font-weight: 700; 
+            color: var(--brand-500); 
+            font-size: 0.75rem;
+        }
+
+        .time-card-title { 
+            font-weight: 800; 
+            color: var(--brand-800); 
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .time-bars { 
+            display: flex; 
+            gap: 2px; 
+            align-items: flex-end; 
+            height: 100px; 
+            overflow-x: auto;
+            padding: 2px 0;
+        }
+
+        .time-bar { 
+            width: 28px; 
+            background: var(--brand-400); 
+            border-radius: 3px 3px 0 0; 
+            position: relative; 
+            flex-shrink: 0;
+        }
+
+        .time-bar.highlight { 
+            background: var(--brand-600); 
+            box-shadow: 0 0 0 2px rgba(74,124,89,0.15); 
+        }
+
+        .time-axis { 
+            display: flex; 
+            gap: 2px; 
+            font-size: 8px; 
+            color: #777; 
+            margin-top: 4px; 
+            overflow-x: auto;
+        }
+
+        .time-tick { 
+            width: 28px; 
+            text-align: center; 
+            white-space: nowrap; 
+            flex-shrink: 0;
+        }
+
+        /* Mobile-optimized notification */
+        .notification {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-sm);
+            right: var(--spacing-sm);
+            background: #28a745;
+            color: white;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-100px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-weight: 700;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        /* Mobile-optimized confirm modal */
+        .confirm-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: var(--spacing-md);
+        }
+
+        .confirm-content {
+            background: #fff;
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--spacing-lg);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .confirm-actions { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-sm); 
+            margin-top: var(--spacing-md); 
+        }
+
+        .confirm-yes {
+            background: var(--brand-600);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-md);
+            font-weight: 800;
+            cursor: pointer;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-yes:hover { 
+            background: var(--brand-500); 
+        }
+
+        .confirm-no {
+            background: #F8FAF9;
+            color: var(--brand-800);
+            border: 2px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-md);
+            font-weight: 800;
+            cursor: pointer;
+            min-height: var(--touch-target);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Utility classes */
+        .hidden { 
+            display: none !important; 
+        }
+
+        /* Focus states for accessibility & speed */
+        button:focus-visible, input:focus-visible { 
+            outline: none; 
+            box-shadow: 0 0 0 3px rgba(110,166,127,0.35); 
+        }
+
+        /* Motion safety */
+        @media (prefers-reduced-motion: reduce) {
+            * { 
+                transition: none !important; 
+                animation: none !important; 
+            }
+        }
+
+        /* Tablet optimizations */
+        @media (min-width: 768px) {
+            .header-content {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .brand h1 {
+                font-size: 1.5rem;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .product-image {
+                width: 60px;
+                height: 100px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .denomination-buttons {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .big-primary {
+                min-height: 100px;
+                font-size: 1.5rem;
+            }
+
+            .main-container {
+                padding: var(--spacing-md);
+            }
+        }
+
+        /* Desktop optimizations */
+        @media (min-width: 1024px) {
+            .main-container {
+                display: flex;
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: var(--spacing-lg);
+                gap: var(--spacing-lg);
+                min-height: calc(100vh - 140px);
+            }
+
+            .order-panel {
+                flex: 0 0 55%;
+                margin-bottom: 0;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .products-section {
+                flex: 1;
+                overflow-y: auto;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .summary-panel {
+                flex: 0 0 45%;
+                margin-bottom: 0;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .queue-panel {
+                flex: 1;
+            }
+
+            .big-actions-stack {
+                max-width: 600px;
+            }
+
+            .stats-panel {
+                margin: 0;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .receipt-content, .receipt-content * {
+                visibility: visible;
+            }
+            .receipt-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            :root {
+                --brand-600: #2D4A3A;
+                --brand-400: #4A6B5A;
+                --border-subtle: #999;
+            }
+        }
+
+        /* Reduced data mode - simplified styles */
+        @media (prefers-reduced-data: reduce) {
+            .product-image img {
+                display: none;
+            }
+            
+            .notification {
+                box-shadow: none;
+            }
+            
+            .card {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div>
+                    <h1>🍃 Matchaboy - Wanayasa</h1>
+                    <div class="brand-info">
+                        Jl. Wanayasa, Purwakarta, Jawa Barat | @matchaboy<br>
+                        "Best Matcha Here"
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <label class="print-toggle" title="Toggle printing receipt on Complete Order">
+                    <input type="checkbox" id="printToggle"> Print receipt
+                </label>
+                <div class="printer-status">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="printerStatus">Disconnected</span>
+                    <button class="connect-btn" id="connectBtn" onclick="connectToPrinter()">
+                        Connect
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container" id="mainContainer">
+        <!-- Left Panel - New Order -->
+        <div class="order-panel" id="orderPanel">
+            <div class="panel-header">
+                <h2>New Order</h2>
+                <p>Select matcha drinks for your customer</p>
+            </div>
+
+            <div class="products-section">
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Order Summary (Form Mode) / Order Queue (Main Mode) -->
+        <div class="summary-panel hidden" id="summaryPanel">
+            <h3 class="order-title">Order Summary</h3>
+            <div class="order-items" id="orderItems">
+                <div class="empty-order">No items selected</div>
+            </div>
+            <div class="order-total" id="orderTotal">Total: Rp0</div>
+            
+            <div class="payment-section">
+                <div class="payment-title">Payment Amount</div>
+                <button type="button" class="exact-btn" id="exactBtn">Uang pas</button>
+                <div class="denomination-buttons" id="denominationButtons"></div>
+                <input type="text" inputmode="numeric" pattern="[0-9]*" class="payment-input" id="paymentInput" placeholder="Rp0">
+                <div class="change-display" id="changeDisplay" style="display: none;">Change: Rp0</div>
+            </div>
+            
+            <div class="customer-toggle">
+                <button type="button" onclick="toggleCustomer()" id="customerToggleBtn">Add customer name</button>
+            </div>
+            <div id="customerSection" class="hidden">
+                <input type="text" class="customer-input" id="customerName" placeholder="Customer name (optional)">
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn cancel-btn" onclick="cancelOrder()">Batal</button>
+                <button class="btn btn-clear" onclick="clearOrder()">Hapus</button>
+                <button class="btn btn-print" id="printBtn" onclick="processOrder()" disabled>Pesan</button>
+            </div>
+        </div>
+
+        <div class="big-action-panel hidden" id="bigActionPanel">
+            <div class="big-actions-stack">
+                <button class="big-primary" onclick="showOrderForm()">+ Add New Order</button>
+                <button class="big-secondary" onclick="showStatsPage()">🤑 Tampilkan Penjualan</button>
+            </div>
+        </div>
+
+        <div class="queue-panel" id="queuePanel">
+            <div class="queue-header">
+                <h2>Pesanan</h2>
+                <div class="queue-stats">
+                    <div class="stat clickable" id="stat-in_progress" onclick="setQueueTab('in_progress')">
+                        <div class="stat-number" id="inProgressOrders">0</div>
+                        <div class="stat-label">In Progress</div>
+                    </div>
+                    <div class="stat clickable" id="stat-completed" onclick="setQueueTab('completed')">
+                        <div class="stat-number" id="readyOrders">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat clickable" id="stat-cancelled" onclick="setQueueTab('cancelled')">
+                        <div class="stat-number" id="cancelledOrders">0</div>
+                        <div class="stat-label">Cancelled</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="queue-content" id="queueContent">
+                <div class="empty-queue">No orders in queue</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <!-- Stats Page -->
+    <div class="stats-panel hidden" id="statsPanel">
+        <div class="stats-header">
+            <div style="font-weight:800">Penjualan Hari Ini</div>
+            <button class="connect-btn" onclick="showQueue()">Kembali</button>
+        </div>
+        <div class="stats-content" id="statsContent"></div>
+    </div>
+
+    <script>
+        // Store and product information
+        const STORE_INFO = {
+            name: "Matchaboy - Wanayasa",
+            address: "Jl. Wanayasa, Purwakarta, Jawa Barat",
+            instagram: "@matchaboy",
+            tagline: "Best Matcha Here"
+        };
+
+        const PRODUCTS = {
+            "matcha_og": { name: "Matcha OG", price: 13000, image: "asstes/images/matcha-OG.jpg" },
+            "cloud_matcha": { name: "Cloud Matcha", price: 14000, image: "asstes/images/matcha-cloud.jpg" },
+            "matcha_cookies": { name: "Matcha Cookies", price: 15000, image: "asstes/images/matcha-cookies.jpg" },
+            "coconut_matcha": { name: "Coconut Matcha", price: 15000, image: "asstes/images/matcha-coconut.jpg" },
+            "honey_matcha": { name: "Honey Matcha", price: 14000, image: "asstes/images/matcha-honey.jpg" },
+            "strawberry_cream_matcha": { name: "Strawberry Cream Matcha", price: 15000, image: "asstes/images/matcha-strawberry-cream.jpg" },
+            "caramel_matcha": { name: "Caramel Matcha", price: 15000, image: "asstes/images/matcha-caramel.jpg" },
+            "ubi_cream_matcha": { name: "Ubi Cream Matcha Latte", price: 15000, image: "asstes/images/matcha-ube-cream.jpg" },
+        };
+
+        const DENOMINATIONS = [15000, 20000, 25000, 50000, 100000];
+
+        // Supabase configuration (hardcoded as requested)
+        const SUPABASE_URL = 'https://vzujuzkhhqibzrpimcvw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6dWp1emtoaHFpYnpycGltY3Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDk5MTgsImV4cCI6MjA3MjcyNTkxOH0.7Oe_LdApNRb-5zKBHUnqslWksoZ3LJfUqLAJMOmrZFQ';
+
+        // Global state
+        let bluetoothDevice = null;
+        let bluetoothCharacteristic = null;
+        let isConnected = false;
+        let currentOrder = {};
+        let orderQueue = [];
+        let orderCounter = 1;
+        let paymentAmount = 0;
+        let printEnabled = true;
+        let uiMode = 'queue';
+        let selectedQueueTab = 'in_progress';
+        let dailyRangeDays = 7;
+        let dailyMetric = 'omzet';
+        let selectedBucketsDate = null;
+
+        // IndexedDB (orders persistence)
+        const DB_NAME = 'MatchaPOS';
+        const DB_VERSION = 1;
+        const STORE_ORDERS = 'orders';
+        const STORE_META = 'metadata';
+        let idbInstance = null;
+
+        function openIDB() {
+            if (idbInstance) return Promise.resolve(idbInstance);
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_ORDERS)) {
+                        const orderStore = db.createObjectStore(STORE_ORDERS, { keyPath: 'id' });
+                        orderStore.createIndex('timestamp', 'timestamp', { unique: false });
+                        orderStore.createIndex('status', 'status', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains(STORE_META)) {
+                        db.createObjectStore(STORE_META, { keyPath: 'key' });
+                    }
+                };
+                req.onsuccess = () => {
+                    idbInstance = req.result;
+                    resolve(idbInstance);
+                };
+            });
+        }
+
+        async function idbGetAllOrders() {
+            const db = await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_ORDERS], 'readonly');
+                const store = tx.objectStore(STORE_ORDERS);
+                const items = [];
+                const req = store.openCursor();
+                req.onerror = () => reject(req.error);
+                req.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        items.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        items.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+                        resolve(items);
+                    }
+                };
+            });
+        }
+
+        async function idbPutOrder(order) {
+            const db = await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_ORDERS], 'readwrite');
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+                tx.objectStore(STORE_ORDERS).put(order);
+            });
+        }
+
+        async function idbUpdateOrderStatus(orderId, status) {
+            const db = await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_ORDERS], 'readwrite');
+                const store = tx.objectStore(STORE_ORDERS);
+                const getReq = store.get(orderId);
+                getReq.onerror = () => reject(getReq.error);
+                getReq.onsuccess = () => {
+                    const order = getReq.result;
+                    if (!order) { resolve(); return; }
+                    order.status = status;
+                    store.put(order);
+                };
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function idbSetMeta(key, value) {
+            const db = await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_META], 'readwrite');
+                const store = tx.objectStore(STORE_META);
+                store.put({ key, value });
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+
+        async function idbGetMeta(key) {
+            const db = await openIDB();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_META], 'readonly');
+                const store = tx.objectStore(STORE_META);
+                const req = store.get(key);
+                req.onerror = () => reject(req.error);
+                req.onsuccess = () => resolve(req.result ? req.result.value : undefined);
+            });
+        }
+
+        // Utility functions
+        function formatRupiah(amount) {
+            return `Rp${amount.toLocaleString('id-ID')}`;
+        }
+
+        function generateOrderId() {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+            return `${dateStr}_${String(orderCounter++).padStart(3, '0')}`;
+        }
+
+        async function saveToLocalStorage() {
+            try {
+                await idbSetMeta('current_order', currentOrder);
+                await idbSetMeta('order_counter', orderCounter);
+            } catch (e) {
+                console.error('Failed saving to IndexedDB', e);
+            }
+        }
+
+        async function loadFromLocalStorage() {
+            try {
+                await openIDB();
+                const [draft, counter, orders] = await Promise.all([
+                    idbGetMeta('current_order'),
+                    idbGetMeta('order_counter'),
+                    idbGetAllOrders()
+                ]);
+                currentOrder = draft || {};
+                orderCounter = typeof counter === 'number' ? counter : 1;
+                orderQueue = Array.isArray(orders) ? orders : [];
+            } catch (e) {
+                console.error('Failed loading from IndexedDB', e);
+                currentOrder = {};
+                orderQueue = [];
+                orderCounter = 1;
+            }
+        }
+
+        function loadSettings() {
+            const s = localStorage.getItem('print_enabled');
+            printEnabled = s === null ? true : s === 'true';
+            const toggle = document.getElementById('printToggle');
+            if (toggle) {
+                toggle.checked = printEnabled;
+                toggle.addEventListener('change', () => {
+                    printEnabled = toggle.checked;
+                    localStorage.setItem('print_enabled', String(printEnabled));
+                });
+            }
+        }
+
+        // Notification system
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${isError ? 'error' : ''} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Printer functions
+        function updatePrinterStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('printerStatus');
+            const connectBtn = document.getElementById('connectBtn');
+
+            if (connected) {
+                statusDot.classList.add('connected');
+                statusText.textContent = 'Connected';
+                connectBtn.textContent = 'Disconnect';
+            } else {
+                statusDot.classList.remove('connected');
+                statusText.textContent = 'Disconnected';
+                connectBtn.textContent = 'Connect';
+            }
+            isConnected = connected;
+        }
+
+        async function connectToPrinter() {
+            if (isConnected) {
+                if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+                    await bluetoothDevice.gatt.disconnect();
+                }
+                bluetoothDevice = null;
+                bluetoothCharacteristic = null;
+                updatePrinterStatus(false);
+                showNotification('Printer disconnected');
+                return;
+            }
+
+            try {
+                bluetoothDevice = await navigator.bluetooth.requestDevice({
+                    filters: [
+                        { namePrefix: 'RPP' },
+                        { namePrefix: 'Printer' },
+                        { namePrefix: 'POS' },
+                        { namePrefix: 'Thermal' }
+                    ],
+                    optionalServices: [
+                        '12345678-1234-1234-1234-123456789abc',
+                        '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+                        'generic_access',
+                        'generic_attribute'
+                    ]
+                });
+
+                const server = await bluetoothDevice.gatt.connect();
+                const services = await server.getPrimaryServices();
+                
+                for (const service of services) {
+                    const characteristics = await service.getCharacteristics();
+                    
+                    for (const characteristic of characteristics) {
+                        if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+                            bluetoothCharacteristic = characteristic;
+                            break;
+                        }
+                    }
+                    
+                    if (bluetoothCharacteristic) break;
+                }
+
+                if (!bluetoothCharacteristic) {
+                    throw new Error('No writable characteristic found');
+                }
+
+                bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+                    updatePrinterStatus(false);
+                    showNotification('Printer disconnected', true);
+                });
+
+                updatePrinterStatus(true);
+                showNotification('Printer connected successfully!');
+
+            } catch (error) {
+                console.error('Printer connection error:', error);
+                showNotification(`Connection failed: ${error.message}`, true);
+                updatePrinterStatus(false);
+            }
+        }
+
+        async function sendToPrinter(data) {
+            if (!isConnected || !bluetoothCharacteristic) {
+                throw new Error('Printer not connected');
+            }
+
+            try {
+                const chunkSize = 20;
+                for (let i = 0; i < data.length; i += chunkSize) {
+                    const chunk = data.slice(i, i + chunkSize);
+                    await bluetoothCharacteristic.writeValue(chunk);
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                return true;
+            } catch (error) {
+                console.error('Error sending to printer:', error);
+                throw error;
+            }
+        }
+
+        // Product and order management
+        function initializeProducts() {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            Object.entries(PRODUCTS).forEach(([id, product]) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="product-image"><img src="${product.image}" alt="${product.name}" loading="lazy" decoding="async" /></div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">${formatRupiah(product.price)}</div>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="updateQuantity('${id}', -1)">−</button>
+                        <span class="qty-display" id="qty-${id}">0</span>
+                        <button class="qty-btn" onclick="updateQuantity('${id}', 1)">+</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateQuantity(productId, change) {
+            if (!currentOrder[productId]) {
+                currentOrder[productId] = 0;
+            }
+            
+            currentOrder[productId] += change;
+            
+            if (currentOrder[productId] <= 0) {
+                delete currentOrder[productId];
+            }
+
+            document.getElementById(`qty-${productId}`).textContent = currentOrder[productId] || 0;
+            
+            const card = document.querySelector(`#qty-${productId}`).closest('.product-card');
+            if (currentOrder[productId] > 0) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+
+            updateOrderSummary();
+            saveToLocalStorage();
+        }
+
+        function updateOrderSummary() {
+            const orderItems = document.getElementById('orderItems');
+            const orderTotal = document.getElementById('orderTotal');
+            const printBtn = document.getElementById('printBtn');
+
+            if (Object.keys(currentOrder).length === 0) {
+                orderItems.innerHTML = '<div class="empty-order">No items selected</div>';
+                orderTotal.textContent = 'Total: Rp0';
+                printBtn.disabled = true;
+                updatePaymentSection(0);
+                return;
+            }
+
+            let html = '';
+            let total = 0;
+
+            Object.entries(currentOrder).forEach(([productId, qty]) => {
+                const product = PRODUCTS[productId];
+                const itemTotal = product.price * qty;
+                total += itemTotal;
+
+                html += `
+                    <div class="order-item">
+                        <div class="item-details">
+                            <div class="item-name">${product.name} x${qty}</div>
+                            <div class="item-price">${formatRupiah(product.price)} each</div>
+                        </div>
+                        <div class="item-total">${formatRupiah(itemTotal)}</div>
+                    </div>
+                `;
+            });
+
+            orderItems.innerHTML = html;
+            orderTotal.textContent = `Total: ${formatRupiah(total)}`;
+            printBtn.disabled = false;
+            updatePaymentSection(total);
+        }
+
+        function updatePaymentSection(orderTotal) {
+            const denominationButtons = document.getElementById('denominationButtons');
+            const paymentInput = document.getElementById('paymentInput');
+            const changeDisplay = document.getElementById('changeDisplay');
+            const exactBtn = document.getElementById('exactBtn');
+
+            denominationButtons.innerHTML = '';
+            const createdButtons = [];
+            for (const denom of DENOMINATIONS) {
+                const btn = document.createElement('button');
+                btn.className = 'denom-btn';
+                btn.dataset.amount = String(denom);
+                btn.textContent = formatRupiah(denom);
+                btn.addEventListener('click', () => {
+                    paymentAmount = denom;
+                    paymentInput.value = formatRupiah(denom);
+                    refreshChange(orderTotal);
+                });
+                denominationButtons.appendChild(btn);
+                createdButtons.push(btn);
+            }
+
+            function parseRupiahToInt(str) {
+                const digits = (str || '').replace(/[^0-9]/g, '');
+                return digits ? parseInt(digits, 10) : 0;
+            }
+
+            paymentInput.oninput = () => {
+                const val = parseRupiahToInt(paymentInput.value);
+                paymentAmount = val;
+                paymentInput.value = val ? formatRupiah(val) : '';
+                refreshChange(orderTotal);
+            };
+
+            if (exactBtn) {
+                exactBtn.onclick = () => {
+                    paymentAmount = orderTotal;
+                    paymentInput.value = formatRupiah(orderTotal);
+                    refreshChange(orderTotal);
+                };
+            }
+
+            function refreshChange(total) {
+                const diff = paymentAmount - total;
+                if (total <= 0) {
+                    changeDisplay.style.display = 'none';
+                    document.getElementById('printBtn').disabled = true;
+                    return;
+                }
+                changeDisplay.style.display = 'block';
+                if (diff < 0) {
+                    changeDisplay.classList.add('insufficient');
+                    changeDisplay.textContent = `Insufficient: ${formatRupiah(Math.abs(diff))}`;
+                } else {
+                    changeDisplay.classList.remove('insufficient');
+                    changeDisplay.textContent = `Change: ${formatRupiah(diff)}`;
+                }
+                document.getElementById('printBtn').disabled = diff < 0 || Object.keys(currentOrder).length === 0;
+                applySelectionStyles(total);
+            }
+
+            function applySelectionStyles(total) {
+                const isExact = paymentAmount === total && total > 0;
+                if (exactBtn) exactBtn.classList.toggle('selected', isExact);
+                createdButtons.forEach(btn => {
+                    const amt = parseInt(btn.dataset.amount || '0', 10);
+                    const selected = !isExact && amt === paymentAmount;
+                    btn.classList.toggle('selected', selected);
+                });
+            }
+
+            refreshChange(orderTotal);
+        }
+
+        function calculateCurrentTotal() {
+            return Object.entries(currentOrder).reduce((sum, [productId, qty]) => {
+                const p = PRODUCTS[productId];
+                return sum + (p ? p.price * qty : 0);
+            }, 0);
+        }
+
+        function clearOrder() {
+            currentOrder = {};
+            paymentAmount = 0;
+            document.getElementById('paymentInput').value = '';
+            Object.keys(PRODUCTS).forEach(id => {
+                const qtyEl = document.getElementById(`qty-${id}`);
+                if (qtyEl) qtyEl.textContent = '0';
+                const card = qtyEl ? qtyEl.closest('.product-card') : null;
+                if (card) card.classList.remove('selected');
+            });
+            updateOrderSummary();
+            saveToLocalStorage();
+            showNotification('Order cleared');
+        }
+
+        function buildReceiptText(order) {
+            const lines = [];
+            lines.push('*** MATCHABOY ***');
+            lines.push(STORE_INFO.name);
+            lines.push(STORE_INFO.address);
+            lines.push(STORE_INFO.instagram);
+            lines.push('--------------------------------');
+            lines.push(`Order: ${order.id}`);
+            lines.push(new Date(order.timestamp).toLocaleString());
+            if (order.customerName) lines.push(`Customer: ${order.customerName}`);
+            lines.push('--------------------------------');
+            order.items.forEach(it => {
+                const left = `${it.productName} x${it.quantity}`;
+                const right = formatRupiah(it.price * it.quantity);
+                lines.push(`${left}`);
+                lines.push(`  @ ${formatRupiah(it.price)}  ${right}`);
+            });
+            lines.push('--------------------------------');
+            lines.push(`TOTAL     : ${formatRupiah(order.total)}`);
+            lines.push(`PAID      : ${formatRupiah(order.payment.amount)}`);
+            lines.push(`CHANGE    : ${formatRupiah(order.payment.change)}`);
+            lines.push('--------------------------------');
+            lines.push('Thank you!');
+            lines.push('Best Matcha Here');
+            lines.push('\n\n\n');
+            return lines.join('\n');
+        }
+
+        async function printReceipt(order) {
+            const text = buildReceiptText(order);
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            try {
+                await sendToPrinter(data);
+                showNotification('Receipt sent to printer');
+                updateOrderStatus(order.id, 'in_progress');
+                showQueue();
+            } catch (e) {
+                showNotification('Print failed (order still saved)', true);
+            }
+        }
+
+        async function processOrder() {
+            const total = calculateCurrentTotal();
+            if (total <= 0) {
+                showNotification('No items in order', true);
+                return;
+            }
+            if (paymentAmount < total) {
+                showNotification('Payment insufficient', true);
+                return;
+            }
+
+            const id = generateOrderId();
+            const customerName = document.getElementById('customerName').value.trim();
+            const items = Object.entries(currentOrder).map(([productId, qty]) => ({
+                productId,
+                productName: PRODUCTS[productId].name,
+                price: PRODUCTS[productId].price,
+                quantity: qty
+            }));
+            const order = {
+                id,
+                timestamp: new Date().toISOString(),
+                customerName: customerName || '',
+                items,
+                subtotal: total,
+                tax: 0,
+                total,
+                payment: {
+                    amount: paymentAmount,
+                    change: paymentAmount - total
+                },
+                status: 'new',
+                notes: '',
+                synced: true
+            };
+
+            orderQueue.unshift(order);
+            try { await idbPutOrder(order); } catch (e) { console.error('IDB put order failed', e); }
+            saveToLocalStorage();
+            renderQueue();
+
+            if (printEnabled) {
+                printReceipt(order);
+            } else {
+                updateOrderStatus(order.id, 'in_progress');
+                showQueue();
+            }
+
+            clearOrder();
+            document.getElementById('customerName').value = '';
+            showNotification('Order created');
+        }
+
+        function renderQueue() {
+            const container = document.getElementById('queueContent');
+            container.innerHTML = '';
+            
+            const filtered = selectedQueueTab === 'completed'
+                ? orderQueue.filter(o => o.status === 'completed' && isToday(o.timestamp))
+                : orderQueue.filter(o => o.status === selectedQueueTab);
+                
+            if (!filtered.length) {
+                container.innerHTML = '<div class="empty-queue">No orders in queue</div>';
+            } else {
+                filtered.forEach(order => {
+                    const div = document.createElement('div');
+                    div.className = `queue-item ${order.status}`;
+                    const itemsPreview = order.items.map(i => `${i.productName} x${i.quantity}`).join(', ');
+                    div.innerHTML = `
+                        <div class="queue-header-info">
+                            <div class="order-id">#${order.id}</div>
+                            <div class="order-time">${new Date(order.timestamp).toLocaleTimeString()}</div>
+                        </div>
+                        <div class="customer-name">${order.customerName || '—'}</div>
+                        <div class="queue-items">${itemsPreview}</div>
+                        <div class="queue-total">${formatRupiah(order.total)}</div>
+                        ${selectedQueueTab === 'in_progress' ? `
+                        <div class="status-buttons">
+                            <button class="btn finish-btn" onclick="confirmFinish('${order.id}')">Selesaikan</button>
+                            <button class="btn cancel-btn" onclick="confirmCancel('${order.id}')">Batal</button>
+                        </div>` : ''}
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            document.getElementById('inProgressOrders').textContent = orderQueue.filter(o => o.status === 'in_progress').length;
+            document.getElementById('readyOrders').textContent = orderQueue.filter(o => o.status === 'completed' && isToday(o.timestamp)).length;
+            document.getElementById('cancelledOrders').textContent = orderQueue.filter(o => o.status === 'cancelled' && isToday(o.timestamp)).length;
+
+            updateStatsActive();
+        }
+
+        async function updateOrderStatus(orderId, status) {
+            const idx = orderQueue.findIndex(o => o.id === orderId);
+            if (idx !== -1) {
+                orderQueue[idx].status = status;
+                try { await idbUpdateOrderStatus(orderId, status); } catch (e) { console.error('IDB status update failed', e); }
+                saveToLocalStorage();
+                renderQueue();
+            }
+        }
+
+        function setQueueTab(tab) {
+            selectedQueueTab = tab;
+            updateStatsActive();
+            renderQueue();
+        }
+
+        function updateStatsActive() {
+            const ids = ['in_progress','completed','cancelled'];
+            ids.forEach(id => {
+                const el = document.getElementById(`stat-${id}`);
+                if (el) el.classList.toggle('active', selectedQueueTab === id);
+            });
+        }
+
+        function isToday(dateStr) {
+            const d = new Date(dateStr);
+            const t = new Date();
+            return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+        }
+
+        function showStatsPage() {
+            uiMode = 'stats';
+            document.getElementById('orderPanel').classList.add('hidden');
+            document.getElementById('summaryPanel').classList.add('hidden');
+            document.getElementById('queuePanel').classList.add('hidden');
+            document.getElementById('bigActionPanel').classList.add('hidden');
+            document.getElementById('mainContainer').classList.add('hidden');
+            document.getElementById('statsPanel').classList.remove('hidden');
+            renderStatsPage();
+        }
+
+        function showQueue() {
+            uiMode = 'queue';
+            document.getElementById('orderPanel').classList.add('hidden');
+            document.getElementById('summaryPanel').classList.add('hidden');
+            document.getElementById('queuePanel').classList.remove('hidden');
+            document.getElementById('bigActionPanel').classList.remove('hidden');
+            document.getElementById('statsPanel').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+        }
+
+        function showOrderForm() {
+            uiMode = 'order';
+            document.getElementById('orderPanel').classList.remove('hidden');
+            document.getElementById('summaryPanel').classList.remove('hidden');
+            document.getElementById('queuePanel').classList.add('hidden');
+            document.getElementById('bigActionPanel').classList.add('hidden');
+            document.getElementById('statsPanel').classList.add('hidden');
+            document.getElementById('mainContainer').classList.remove('hidden');
+            
+            paymentAmount = 0;
+            document.getElementById('paymentInput').value = '';
+            const cs = document.getElementById('customerSection');
+            const ct = document.getElementById('customerToggleBtn');
+            if (cs) cs.classList.add('hidden');
+            if (ct) ct.textContent = 'Add customer name';
+            updatePaymentSection(calculateCurrentTotal());
+        }
+
+        function renderStatsPage() {
+            const { omzet, items, totalItems } = aggregateToday();
+            const maxQty = Math.max(1, ...items.map(i => i.qty));
+            const content = document.getElementById('statsContent');
+            let html = '';
+            html += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:800; color:var(--brand-800)">Total Omzet</div>
+                        <div style="font-weight:900; color:var(--brand-500); font-size:1.2rem">${formatRupiah(omzet)}</div>
+                    </div>
+                    <div style="margin-top:6px; color:#666">Items terjual: <strong>${totalItems}</strong></div>
+                </div>`;
+
+            html += `<div class="card">
+                        <div style="font-weight:800; color:var(--brand-800); margin-bottom:6px">Most Selling Items</div>`;
+            if (!items.length) {
+                html += `<div style="color:#666; font-style:italic">Belum ada penjualan hari ini</div>`;
+            } else {
+                items.forEach(it => {
+                    const w = Math.round((it.qty / maxQty) * 100);
+                    html += `
+                    <div class="bar-row">
+                        <div class="bar-label">${it.name}</div>
+                        <div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div>
+                        <div class="bar-meta">${it.qty} | ${formatRupiah(it.total)}</div>
+                    </div>`;
+                });
+            }
+            html += `</div>`;
+
+            // Time buckets (30-minute intervals) — supports historical day selection
+            const targetDate = selectedBucketsDate || new Date();
+            const isTodaySelected = isSameDay(targetDate, new Date());
+            const buckets = aggregateBuckets30m(targetDate);
+            const maxBucket = Math.max(0, ...buckets.map(b => b.count));
+            const peak = buckets.reduce((p, b) => (b.count > p.count ? b : p), { count: -1 });
+            html += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap">
+                        <div class="time-card-title">Penjualan per 30 Menit ${peak.count >= 0 ? `(Puncak: ${peak.label} — ${peak.count} item)` : ''}
+                            <span style="margin-left:8px; font-size:.85rem; color:#2D5016; font-weight:800">${formatDisplayDate(targetDate)}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <button class="tab-btn" title="Previous day" style="padding:6px 10px; font-size:.85rem" onclick="shiftBucketDate(-1)">◀</button>
+                            <button class="tab-btn" title="Today" style="padding:6px 10px; font-size:.85rem" onclick="setBucketDateToToday()">Hari ini</button>
+                            <input type="date" id="bucketDateInput" value="${formatDateForInput(targetDate)}" max="${formatDateForInput(new Date())}" onchange="onBucketDateChange(this.value)" style="padding:6px 10px; border:2px solid var(--border-subtle); border-radius:10px; font-weight:600" />
+                            <button class="tab-btn" title="Next day" style="padding:6px 10px; font-size:.85rem" onclick="shiftBucketDate(1)" ${isTodaySelected ? 'disabled' : ''}>▶</button>
+                        </div>
+                    </div>
+                    <div class="time-bars">`;
+            buckets.forEach(b => {
+                const h = maxBucket ? Math.round((b.count / maxBucket) * 100) : 0;
+                const hi = peak && b.label === peak.label && b.count === peak.count;
+                const ratio = maxBucket ? (b.count / maxBucket) : 0; // 0..1
+                const light = Math.max(30, Math.min(80, Math.round(80 - ratio * 40))); // 80% (low) -> 40% (high)
+                const color = `hsl(140, 60%, ${light}%)`;
+                html += `<div class="time-bar ${hi ? 'highlight' : ''}" title="${b.label}: ${b.count}" style="height:${Math.max(4,h)}%; background:${color}">${`<div style=\"position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:10px; color:#2D5016; font-weight:800; white-space:nowrap;\">${b.count}</div>`}</div>`;
+            });
+            html += `</div>
+                    <div class="time-axis">`;
+            buckets.forEach((b, idx) => {
+                // Show label at each full hour (when bucket start minute == 0)
+                const show = b.start.getMinutes() === 0;
+                html += `<div class="time-tick">${show ? pad2(b.start.getHours()) + ':' + pad2(b.start.getMinutes()) : '&nbsp;'}</div>`;
+            });
+            html += `</div>
+                </div>`;
+
+            // Daily range (1-7/14/30 days) chart with Omzet/Items toggle
+            const daily = aggregateDaily(dailyRangeDays);
+            // Expose for breakdown toggles and reset breakdown cache
+            window.lastDailyAgg = daily;
+            window.dailyBreakdownCache = {};
+            const maxAmt = Math.max(1, ...daily.map(d => d.amount));
+            const maxItems = Math.max(1, ...daily.map(d => d.items));
+            const todayIdx = daily.length - 1;
+            // KPIs (today)
+            const todayDaily = daily[todayIdx] || { amount: 0, items: 0, orders: 0 };
+            const yesterdayDaily = (daily.length >= 2) ? daily[daily.length - 2] : null;
+            const deltaAmt = (yesterdayDaily && yesterdayDaily.amount > 0)
+                ? Math.round(((todayDaily.amount - yesterdayDaily.amount) / yesterdayDaily.amount) * 100)
+                : null;
+            const cancelledToday = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'cancelled').length;
+            const avgTicket = todayDaily.orders ? Math.round(todayDaily.amount / todayDaily.orders) : 0;
+            const deltaBadge = (deltaAmt === null)
+                ? ''
+                : `<span style="margin-left:8px; font-size:.85rem; font-weight:800; ${deltaAmt>=0?'color:#28a745':'color:#dc3545'}">${deltaAmt>=0?'▲':'▼'} ${Math.abs(deltaAmt)}%</span>`;
+            html += `
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                        <div class="time-card-title">Ringkasan Harian <span id="metricTitle">(${dailyMetric==='items'?'Items':'Omzet'})</span>${deltaBadge}</div>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end">
+                            <div style="background:#F0F7F4; border:2px solid var(--border-subtle); border-radius:999px; overflow:hidden; display:flex;">
+                                <button onclick="setDailyMetric('omzet')" class="tab-btn ${dailyMetric==='omzet'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Omzet</button>
+                                <button onclick="setDailyMetric('items')" class="tab-btn ${dailyMetric==='items'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Items</button>
+                            </div>
+                            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                                ${[1,2,3,4,5,6,7,14,30].map(n => `<button onclick=\"setDailyRange(${n})\" class=\"tab-btn ${n===dailyRangeDays?'active':''}\" style=\"padding:6px 10px; font-size:0.85rem;\">${n} hari</button>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:32px">
+                        <span style="background:#e9f6f0; border:1px solid #A7D7C5; border-radius:10px; padding:6px 10px; font-weight:800; color:#2D5016">Orders: ${todayDaily.orders}</span>
+                        <span style="background:#e9f6f0; border:1px solid #A7D7C5; border-radius:10px; padding:6px 10px; font-weight:800; color:#2D5016">Items: ${todayDaily.items}</span>
+                        <span style="background:#e9f6f0; border:1px solid #A7D7C5; border-radius:10px; padding:6px 10px; font-weight:800; color:#2D5016">Avg Order: ${formatRupiah(avgTicket)}</span>
+                        <span style="background:#fff0f1; border:1px solid #f5c2c7; border-radius:10px; padding:6px 10px; font-weight:800; color:#dc3545">Cancelled: ${cancelledToday}</span>
+                    </div>
+                    <div class="time-bars">`;
+            daily.forEach((d, idx) => {
+                const value = dailyMetric === 'items' ? d.items : d.amount;
+                const maxVal = dailyMetric === 'items' ? maxItems : maxAmt;
+                const h = maxVal ? Math.round((value / maxVal) * 100) : 0;
+                const isTodayBar = idx === todayIdx;
+                const label = dailyMetric === 'items' ? (value + 'x') : formatRupiah(value);
+                html += `<div class="time-bar ${isTodayBar ? 'highlight' : ''}" title="${d.label}: ${label}" style="height:${Math.max(4,h)}%" onclick="setBucketDateByMillis(${d.date.getTime()})">${`<div style=\"position:absolute; bottom:100%; left:50%; transform:translateX(-50%); font-size:10px; color:#2D5016; font-weight:800; white-space:nowrap;\">${label}</div>`}</div>`;
+            });
+            html += `</div>
+                    <div class="time-axis">`;
+            daily.forEach(d => {
+                html += `<div class="time-tick" title="${d.full}">${d.label}</div>`;
+            });
+            html += `</div>
+                    <div style="margin-top:10px; overflow:auto">
+                        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                            <thead>
+                                <tr style="text-align:left; color:var(--brand-800)">
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Date</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Omzet</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Orders</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Items</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Avg Order</th>
+                                    <th style="padding:6px; border-bottom:1px solid #e5e7eb;">Top Item</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${[...daily].map((d,i)=>({d,i})).reverse().slice(0, Math.min(daily.length, 10)).map(({d,i}) => {
+                                    const avg = d.orders ? Math.round(d.amount / d.orders) : 0;
+                                    const top = d.top || '-';
+                                    return `
+                                    <tr id=\"daily-row-${i}\">
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; white-space:nowrap;\" title=\"${d.full}\">
+                                            <button onclick=\"toggleDailyBreakdown(${i})\" class=\"tab-btn\" style=\"padding:2px 8px; font-size:0.8rem; margin-right:6px;\">▾</button>${d.label}
+                                        </td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7; color:var(--brand-500); font-weight:800\">${formatRupiah(d.amount)}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.orders}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${d.items}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${formatRupiah(avg)}</td>
+                                        <td style=\"padding:6px; border-bottom:1px dashed #eef2f7;\">${top}</td>
+                                    </tr>
+                                    <tr id=\"daily-breakdown-${i}\" style=\"display:none; background:#F8FAF9;\">
+                                        <td colspan=\"6\" style=\"padding:10px 6px; border-bottom:1px dashed #eef2f7;\">
+                                            <div id=\"daily-breakdown-body-${i}\" style=\"padding:6px 6px;\"></div>
+                                        </td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+
+            content.innerHTML = html;
+        }
+
+        // Analytics helper functions
+        function aggregateToday() {
+            const todayCompleted = orderQueue.filter(o => isToday(o.timestamp) && o.status === 'completed');
+            const omzet = todayCompleted.reduce((s, o) => s + (o.total || 0), 0);
+            const itemMap = new Map();
+            todayCompleted.forEach(o => {
+                o.items.forEach(it => {
+                    const prev = itemMap.get(it.productId) || { name: it.productName, qty: 0, total: 0 };
+                    prev.qty += it.quantity;
+                    prev.total += it.price * it.quantity;
+                    itemMap.set(it.productId, prev);
+                });
+            });
+            const items = Array.from(itemMap.values()).sort((a,b) => b.qty - a.qty);
+            const totalItems = items.reduce((s,i)=>s+i.qty,0);
+            return { omzet, items, totalItems };
+        }
+
+        function pad2(n){ return n.toString().padStart(2,'0'); }
+
+        function isSameDay(a, b) {
+            return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+        }
+
+        function formatDateForInput(d) {
+            const yyyy = d.getFullYear();
+            const mm = pad2(d.getMonth() + 1);
+            const dd = pad2(d.getDate());
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function formatDisplayDate(d) {
+            const today = new Date();
+            if (isSameDay(d, today)) return 'Hari ini';
+            const day = pad2(d.getDate());
+            const mon = pad2(d.getMonth() + 1);
+            const yr = d.getFullYear();
+            return `${day}/${mon}/${yr}`;
+        }
+
+        function onBucketDateChange(value) {
+            if (!value) return;
+            const [yyyy, mm, dd] = value.split('-').map(Number);
+            const d = new Date(yyyy, (mm || 1) - 1, dd || 1, 12, 0, 0, 0);
+            selectedBucketsDate = d;
+            renderStatsPage();
+        }
+
+        function setBucketDateToToday() {
+            selectedBucketsDate = new Date();
+            renderStatsPage();
+        }
+
+        function setBucketDateByMillis(ms) {
+            const d = new Date(ms);
+            selectedBucketsDate = d;
+            renderStatsPage();
+        }
+
+        function shiftBucketDate(deltaDays) {
+            const base = selectedBucketsDate || new Date();
+            const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + (deltaDays || 0), 12, 0, 0, 0);
+            selectedBucketsDate = d;
+            renderStatsPage();
+        }
+
+        function aggregateBuckets30m(day) {
+            const base = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+            const start = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 9, 0, 0, 0); // 09:00 (static)
+            const end = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 21, 0, 0, 0); // 21:00 (static)
+            const msPerBucket = 30 * 60 * 1000;
+            const bucketCount = Math.floor((end - start) / msPerBucket); // fixed 24 buckets
+            const buckets = Array.from({ length: bucketCount }, (_, i) => {
+                const s = new Date(start.getTime() + i * msPerBucket);
+                const e = new Date(start.getTime() + (i + 1) * msPerBucket);
+                return { start: s, end: e, label: `${pad2(s.getHours())}:${pad2(s.getMinutes())}-${pad2(e.getHours())}:${pad2(e.getMinutes())}`, count: 0 };
+            });
+
+            const dayCompleted = orderQueue.filter(o => {
+                if (o.status !== 'completed') return false;
+                const t = new Date(o.timestamp);
+                return t >= start && t < end && isSameDay(t, base);
+            });
+            dayCompleted.forEach(o => {
+                const t = new Date(o.timestamp);
+                const idx = Math.floor((t - start) / msPerBucket);
+                const itemsCount = o.items.reduce((s, it) => s + (it.quantity || 0), 0);
+                if (buckets[idx]) buckets[idx].count += itemsCount;
+            });
+
+            return buckets;
+        }
+
+        function aggregateDaily(days) {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (days - 1), 0, 0, 0, 0);
+            const oneDay = 24 * 60 * 60 * 1000;
+            const result = [];
+            for (let i = 0; i < days; i++) {
+                const dayStart = new Date(start.getTime() + i * oneDay);
+                const dayEnd = new Date(dayStart.getTime() + oneDay - 1);
+                const orders = orderQueue.filter(o => {
+                    const t = new Date(o.timestamp);
+                    return o.status === 'completed' && t >= dayStart && t <= dayEnd;
+                });
+                const amount = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+                const items = orders.reduce((sum, o) => sum + o.items.reduce((s, it) => s + (it.quantity || 0), 0), 0);
+                const itemMap = new Map();
+                orders.forEach(o => o.items.forEach(it => {
+                    const prev = itemMap.get(it.productId) || { name: it.productName, qty: 0 };
+                    prev.qty += (it.quantity || 0);
+                    itemMap.set(it.productId, prev);
+                }));
+                let top = null;
+                if (itemMap.size) {
+                    top = Array.from(itemMap.values()).sort((a,b) => b.qty - a.qty)[0].name;
+                }
+                const dd = pad2(dayStart.getDate());
+                const mm = pad2(dayStart.getMonth() + 1);
+                result.push({ date: dayStart, label: `${dd}/${mm}`, full: `${dd}/${mm}/${dayStart.getFullYear()}`, amount, items, orders: orders.length, top });
+            }
+            return result;
+        }
+
+        function setDailyRange(n) {
+            dailyRangeDays = n;
+            renderStatsPage();
+        }
+
+        function setDailyMetric(metric) {
+            dailyMetric = metric === 'items' ? 'items' : 'omzet';
+            renderStatsPage();
+        }
+
+        // Daily product breakdown helpers (expandable rows)
+        window.dailyBreakdownCache = {};
+
+        function getDayRangeByIndex(i) {
+            const d = (window.lastDailyAgg && window.lastDailyAgg[i]) ? window.lastDailyAgg[i].date : null;
+            if (!d) return null;
+            const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+            const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1);
+            return { start, end };
+        }
+
+        function computeDailyBreakdown(i) {
+            if (window.dailyBreakdownCache[i]) return window.dailyBreakdownCache[i];
+            const range = getDayRangeByIndex(i);
+            if (!range) return [];
+            const { start, end } = range;
+            const map = new Map();
+            const orders = orderQueue.filter(o => {
+                if (o.status !== 'completed') return false;
+                const t = new Date(o.timestamp);
+                return t >= start && t <= end;
+            });
+            orders.forEach(o => {
+                o.items.forEach(it => {
+                    const key = it.productId;
+                    const prev = map.get(key) || { name: it.productName, qty: 0, total: 0 };
+                    const q = it.quantity || 0;
+                    prev.qty += q;
+                    prev.total += (it.price || 0) * q;
+                    map.set(key, prev);
+                });
+            });
+            const arr = Array.from(map.values()).sort((a,b) => b.qty - a.qty);
+            window.dailyBreakdownCache[i] = arr;
+            return arr;
+        }
+
+        function renderBars(items, cap = 10) {
+            if (!items || !items.length) return '<div class="empty-order">No sales this day</div>';
+            const maxQty = Math.max(1, ...items.map(it => it.qty));
+            const list = items.slice(0, cap);
+            return list.map(it => {
+                const w = Math.round((it.qty / maxQty) * 100);
+                return `
+                    <div class="bar-row">
+                        <div class="bar-label" title="${it.name}">${it.name}</div>
+                        <div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div>
+                        <div class="bar-meta">${it.qty} | ${formatRupiah(it.total)}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderDailyBreakdown(i, showAll = false) {
+            const items = computeDailyBreakdown(i);
+            const body = document.getElementById(`daily-breakdown-body-${i}`);
+            if (!body) return;
+            const cap = showAll ? items.length : 10;
+            const content = `
+                <div>
+                    ${renderBars(items, cap)}
+                    ${items.length > 10 ? `<div style="margin-top:8px; text-align:right;"><button class="tab-btn" style="padding:4px 8px; font-size:.8rem" onclick="toggleDailyShowAll(${i})">${showAll ? 'Show less' : 'Show all'}</button></div>` : ''}
+                </div>`;
+            body.innerHTML = content;
+        }
+
+        window._dailyExpanded = {};
+        window._dailyShowAll = {};
+        function toggleDailyBreakdown(i) {
+            const tr = document.getElementById(`daily-breakdown-${i}`);
+            const btn = document.querySelector(`#daily-row-${i} button`);
+            if (!tr) return;
+            const expanded = tr.style.display !== 'none';
+            if (expanded) {
+                tr.style.display = 'none';
+                if (btn) btn.textContent = '▾';
+                window._dailyExpanded[i] = false;
+            } else {
+                tr.style.display = '';
+                if (btn) btn.textContent = '▴';
+                window._dailyExpanded[i] = true;
+                renderDailyBreakdown(i, !!window._dailyShowAll[i]);
+            }
+        }
+
+        function toggleDailyShowAll(i) {
+            window._dailyShowAll[i] = !window._dailyShowAll[i];
+            renderDailyBreakdown(i, !!window._dailyShowAll[i]);
+        }
+
+        function restoreProductSelections() {
+            Object.entries(currentOrder).forEach(([productId, qty]) => {
+                const qtyEl = document.getElementById(`qty-${productId}`);
+                if (qtyEl) {
+                    qtyEl.textContent = qty;
+                    const card = qtyEl.closest('.product-card');
+                    if (card) card.classList.add('selected');
+                }
+            });
+        }
+
+        function toggleCustomer() {
+            const section = document.getElementById('customerSection');
+            const btn = document.getElementById('customerToggleBtn');
+            const nowHidden = section.classList.toggle('hidden');
+            btn.textContent = nowHidden ? 'Add customer name' : 'Hide customer name';
+            if (nowHidden) {
+                const input = document.getElementById('customerName');
+                if (input) input.value = '';
+            }
+        }
+
+        function cancelOrder() {
+            clearOrder();
+            showQueue();
+            showNotification('Order cancelled');
+        }
+
+        function confirmFinish(orderId) {
+            const modal = document.getElementById('confirmModal');
+            modal.style.display = 'flex';
+            const yes = document.getElementById('confirmYes');
+            const no = document.getElementById('confirmNo');
+            const cleanup = () => {
+                yes.onclick = null; no.onclick = null; modal.style.display = 'none';
+            };
+            yes.onclick = async () => {
+                await updateOrderStatus(orderId, 'completed');
+                cleanup();
+            };
+            no.onclick = () => { cleanup(); };
+        }
+
+        function confirmCancel(orderId) {
+            const first = window.confirm('Cancel this order?');
+            if (!first) return;
+            const second = window.confirm('Are you sure? This action cannot be undone.');
+            if (!second) return;
+            updateOrderStatus(orderId, 'cancelled');
+            showNotification('Order cancelled');
+        }
+
+        async function init() {
+            await loadFromLocalStorage();
+            loadSettings();
+            initializeProducts();
+            restoreProductSelections();
+            updateOrderSummary();
+            renderQueue();
+            showQueue();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Register Service Worker for PWA offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(console.error);
+            });
+        }
+    </script>
+
+    <!-- Confirm Finish Modal -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-content">
+            <div>Selesaikan pesanan ini?</div>
+            <div class="confirm-actions">
+                <button id="confirmYes" class="confirm-yes">Ya</button>
+                <button id="confirmNo" class="confirm-no">Tidak</button>
+            </div>
+        </div>
+    </div>
+
+    </body>
+    </html>
