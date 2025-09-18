@@ -6,6 +6,19 @@
     <title>Matchaboy POS - Best Matcha Here</title>
     <meta name="theme-color" content="#4A7C59">
     <link rel="manifest" href="manifest.webmanifest">
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // This will be called when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Supabase client loaded', { 
+                supabase: typeof supabase,
+                supabaseClient: typeof supabaseClient,
+                windowSupabase: typeof window.supabase,
+                windowSupabaseClient: typeof window.supabaseClient
+            });
+        });
+    </script>
     <!-- Modern typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1328,6 +1341,85 @@
         // Supabase configuration (hardcoded as requested)
         const SUPABASE_URL = 'https://vzujuzkhhqibzrpimcvw.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6dWp1emtoaHFpYnpycGltY3Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDk5MTgsImV4cCI6MjA3MjcyNTkxOH0.7Oe_LdApNRb-5zKBHUnqslWksoZ3LJfUqLAJMOmrZFQ';
+        const SUPABASE_TABLE = 'orders';
+        let supabase = null;
+
+        // Initialize Supabase client
+        function initSupabase() {
+            try {
+                // Check if Supabase is loaded
+                const supabaseClient = window.supabase || window.supabaseClient;
+                if (!supabaseClient) {
+                    console.error('Supabase client not found in window object');
+                    return false;
+                }
+                
+                // Create a single supabase client for interacting with your database
+                supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    auth: {
+                        persistSession: false
+                    }
+                });
+                console.log('Supabase client initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Error initializing Supabase client:', error);
+                return false;
+            }
+        }
+
+        // Sync order to Supabase
+        async function syncOrderToSupabase(order) {
+            if (!supabase) return false;
+            
+            try {
+                // Map the order data to match your Supabase schema
+                const orderData = {
+                    order_id: order.id,  // Using order_id as per your table schema
+                    timestamp: order.timestamp,
+                    customer_name: order.customerName || '',
+                    items: order.items,
+                    subtotal: order.subtotal,
+                    tax: order.tax || 0,
+                    total: order.total,
+                    payment: order.payment || { amount: order.total, change: 0 }, // Store payment as JSONB
+                    status: order.status,
+                    notes: order.notes || '',
+                    synced: true,
+                    created_at: new Date().toISOString()
+                };
+
+                const { data, error } = await supabase
+                    .from(SUPABASE_TABLE)
+                    .upsert([orderData], { onConflict: 'order_id' }); // Using order_id as the conflict resolution key
+
+                if (error) throw error;
+                return true;
+            } catch (error) {
+                console.error('Error syncing order to Supabase:', error);
+                return false;
+            }
+        }
+
+        // Process any pending syncs
+        async function processPendingSyncs() {
+            try {
+                const orders = await idbGetAllOrders();
+                const pendingSyncs = orders.filter(o => o.status === 'completed' && !o.synced);
+                
+                for (const order of pendingSyncs) {
+                    const success = await syncOrderToSupabase(order);
+                    if (success) {
+                        order.synced = true;
+                        await idbPutOrder(order);
+                    } else {
+                        console.warn(`Failed to sync order ${order.id}, will retry later`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing pending syncs:', error);
+            }
+        }
 
         // Global state
         let bluetoothDevice = null;
@@ -1862,9 +1954,9 @@
                     amount: paymentAmount,
                     change: paymentAmount - total
                 },
-                status: 'new',
+                status: 'in_progress',
                 notes: '',
-                synced: true
+                synced: false
             };
 
             orderQueue.unshift(order);
@@ -2408,18 +2500,50 @@
             showNotification('Order cancelled');
         }
 
-        function confirmFinish(orderId) {
+        async function confirmFinish(orderId) {
             const modal = document.getElementById('confirmModal');
             modal.style.display = 'flex';
             const yes = document.getElementById('confirmYes');
             const no = document.getElementById('confirmNo');
+            const message = document.getElementById('confirmMessage');
+            
+            if (message) {
+                message.textContent = 'Mark this order as completed?';
+            }
+            
             const cleanup = () => {
-                yes.onclick = null; no.onclick = null; modal.style.display = 'none';
+                yes.onclick = null; 
+                no.onclick = null; 
+                modal.style.display = 'none';
             };
+            
             yes.onclick = async () => {
+                // First update the status to completed
                 await updateOrderStatus(orderId, 'completed');
+                
+                // Get the updated order
+                const order = orderQueue.find(o => o.id === orderId);
+                if (order) {
+                    // Try to sync with Supabase
+                    const syncSuccess = await syncOrderToSupabase(order);
+                    
+                    if (syncSuccess) {
+                        // Update sync status in IndexedDB
+                        order.synced = true;
+                        await idbPutOrder(order);
+                        showNotification('Order completed and synced');
+                    } else {
+                        // If sync fails, the order will be synced later
+                        showNotification('Order completed (will sync when online)', false, true);
+                    }
+                    
+                    // Process any other pending syncs
+                    await processPendingSyncs();
+                }
+                
                 cleanup();
             };
+            
             no.onclick = () => { cleanup(); };
         }
 
@@ -2436,6 +2560,15 @@
             await loadFromLocalStorage();
             loadSettings();
             initializeProducts();
+            
+            // Initialize Supabase
+            const supabaseInitialized = await initSupabase();
+            if (!supabaseInitialized) {
+                console.warn('Supabase initialization failed, running in offline mode');
+            }
+            
+            // Process any pending syncs on startup
+            setTimeout(processPendingSyncs, 2000); // Small delay to let the app initialize
             restoreProductSelections();
             updateOrderSummary();
             renderQueue();

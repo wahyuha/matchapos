@@ -410,7 +410,7 @@
                         payment: order.payment || {},
                         status: order.status || 'completed',
                         notes: order.notes,
-                        synced_from_supabase: true,
+                        synced: true,
                         synced_at: new Date().toISOString()
                     }));
                     
