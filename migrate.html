@@ -75,6 +75,15 @@
             box-shadow: none;
         }
         
+        .migration-button.download-btn {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+        }
+        
+        .migration-button.download-btn:hover {
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+        }
+        
         .progress-bar {
             width: 100%;
             height: 20px;
@@ -166,6 +175,7 @@
             <div class="status-title">Current Data Status</div>
             <div class="status-info" id="localStorage-status">Checking localStorage...</div>
             <div class="status-info" id="indexeddb-status">Checking IndexedDB...</div>
+            <div class="status-info" id="supabase-status">Checking Supabase...</div>
         </div>
         
         <div id="data-preview-container" style="display: none;">
@@ -180,6 +190,9 @@
         </button>
         <button class="migration-button" id="syncSupabaseBtn" onclick="startSyncToSupabase()">
             ☁️ Sync IndexedDB → Supabase (Bulk)
+        </button>
+        <button class="migration-button download-btn" id="syncFromSupabaseBtn" onclick="startSyncFromSupabase()">
+            ⬇️ Sync Supabase → IndexedDB
         </button>
         
         <div class="progress-bar" id="progressBar">
@@ -247,7 +260,7 @@
                 });
             }
             
-            checkDataStatus() {
+            async checkDataStatus() {
                 // Check localStorage
                 const localData = localStorage.getItem(this.localStorageKey);
                 const localStatus = document.getElementById('localStorage-status');
@@ -274,7 +287,10 @@
                 }
                 
                 // Check IndexedDB
-                this.checkIndexedDBStatus();
+                await this.checkIndexedDBStatus();
+                
+                // Check Supabase
+                await this.checkSupabaseStatus();
             }
             
             async checkIndexedDBStatus() {
@@ -294,6 +310,196 @@
                     indexedDBStatus.style.color = '#742a2a';
                     document.getElementById('migrateBtn').disabled = true;
                 }
+            }
+            
+            async checkSupabaseStatus() {
+                const supabaseStatus = document.getElementById('supabase-status');
+                
+                try {
+                    const count = await this.getSupabaseOrderCount();
+                    if (count > 0) {
+                        supabaseStatus.textContent = `✅ ${count} orders found in Supabase`;
+                        supabaseStatus.style.color = '#22543d';
+                    } else {
+                        supabaseStatus.textContent = '⚠️ No orders found in Supabase';
+                        supabaseStatus.style.color = '#744210';
+                        document.getElementById('syncFromSupabaseBtn').disabled = true;
+                    }
+                } catch (error) {
+                    supabaseStatus.textContent = '❌ Cannot connect to Supabase';
+                    supabaseStatus.style.color = '#742a2a';
+                    document.getElementById('syncFromSupabaseBtn').disabled = true;
+                    this.log(`Supabase connection error: ${error.message}`, 'error');
+                }
+            }
+            
+            async getSupabaseOrderCount() {
+                const url = `${this.SUPABASE_URL}/rest/v1/${this.table_name}?select=count`;
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    headers: {
+                        'apikey': this.SUPABASE_KEY,
+                        'Authorization': `Bearer ${this.SUPABASE_KEY}`,
+                        'Prefer': 'count=exact'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const count = response.headers.get('Content-Range');
+                return count ? parseInt(count.split('/')[1]) : 0;
+            }
+            
+            async fetchAllFromSupabase() {
+                const url = `${this.SUPABASE_URL}/rest/v1/${this.table_name}?select=*&order=timestamp.desc`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': this.SUPABASE_KEY,
+                        'Authorization': `Bearer ${this.SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                return await response.json();
+            }
+            
+            async startSyncFromSupabase() {
+                const syncBtn = document.getElementById('syncFromSupabaseBtn');
+                const progressBar = document.getElementById('progressBar');
+                const logContainer = document.getElementById('logContainer');
+
+                // Disable button and show progress
+                syncBtn.disabled = true;
+                syncBtn.textContent = '⏳ Syncing from Supabase...';
+                progressBar.style.display = 'block';
+                logContainer.style.display = 'block';
+
+                this.clearResult();
+                this.log('Starting sync from Supabase to IndexedDB...', 'info');
+
+                try {
+                    // Fetch all orders from Supabase
+                    this.log('Fetching orders from Supabase...', 'info');
+                    this.updateProgress(10);
+                    
+                    const supabaseOrders = await this.fetchAllFromSupabase();
+                    if (!supabaseOrders || supabaseOrders.length === 0) {
+                        throw new Error('No orders found in Supabase to sync');
+                    }
+                    
+                    this.log(`Found ${supabaseOrders.length} orders in Supabase`, 'info');
+                    this.updateProgress(20);
+
+                    // Convert Supabase format to IndexedDB format
+                    const convertedOrders = supabaseOrders.map(order => ({
+                        id: order.order_id,
+                        timestamp: order.timestamp,
+                        customerName: order.customer_name,
+                        items: order.items || [],
+                        subtotal: order.subtotal || 0,
+                        tax: order.tax || 0,
+                        total: order.total || 0,
+                        payment: order.payment || {},
+                        status: order.status || 'completed',
+                        notes: order.notes,
+                        synced_from_supabase: true,
+                        synced_at: new Date().toISOString()
+                    }));
+                    
+                    this.log('Converted orders to IndexedDB format', 'info');
+                    this.updateProgress(30);
+
+                    // Clear existing IndexedDB data (optional - ask user)
+                    await this.clearIndexedDBOrders();
+                    this.log('Cleared existing IndexedDB orders', 'info');
+                    this.updateProgress(40);
+
+                    // Save to IndexedDB in batches
+                    const batchSize = 50;
+                    let processed = 0;
+                    let successful = 0;
+                    let failed = 0;
+
+                    for (let i = 0; i < convertedOrders.length; i += batchSize) {
+                        const batch = convertedOrders.slice(i, i + batchSize);
+                        const batchNumber = Math.floor(i / batchSize) + 1;
+                        const totalBatches = Math.ceil(convertedOrders.length / batchSize);
+                        
+                        try {
+                            this.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} orders)`, 'info');
+                            await this.saveBatch(batch);
+                            successful += batch.length;
+                            this.log(`✅ Successfully saved batch ${batchNumber}`, 'success');
+                        } catch (error) {
+                            failed += batch.length;
+                            this.log(`❌ Failed saving batch ${batchNumber}: ${error.message}`, 'error');
+                        }
+                        
+                        processed += batch.length;
+                        const progress = 40 + (processed / convertedOrders.length) * 50;
+                        this.updateProgress(progress);
+                    }
+
+                    // Save sync metadata
+                    await this.saveSyncMetadata({
+                        source: 'supabase',
+                        total_orders: convertedOrders.length,
+                        successful: successful,
+                        failed: failed
+                    });
+                    
+                    this.updateProgress(100);
+                    const summary = `Sync completed: ${successful} successful, ${failed} failed out of ${convertedOrders.length} orders`;
+                    this.log(summary, failed === 0 ? 'success' : 'warning');
+                    this.showResult(failed === 0 ? 'success' : 'warning', `⬇️ ${summary}`);
+                    
+                    // Update status displays
+                    await this.checkIndexedDBStatus();
+                    
+                } catch (error) {
+                    this.log(`Sync from Supabase failed: ${error.message}`, 'error');
+                    this.showResult('error', `❌ Sync from Supabase failed: ${error.message}`);
+                } finally {
+                    syncBtn.disabled = false;
+                    syncBtn.textContent = '⬇️ Sync Supabase → IndexedDB';
+                }
+            }
+            
+            async clearIndexedDBOrders() {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['orders'], 'readwrite');
+                    const store = transaction.objectStore('orders');
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            async saveSyncMetadata(syncInfo) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(['metadata'], 'readwrite');
+                    const store = transaction.objectStore('metadata');
+                    
+                    const metadata = {
+                        key: 'sync_from_supabase_info',
+                        sync_date: new Date().toISOString(),
+                        ...syncInfo,
+                        version: '1.0'
+                    };
+                    
+                    const request = store.put(metadata);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
             }
             
             showDataPreview(data) {
@@ -640,6 +846,9 @@
         }
         function startSyncToSupabase() {
             migrationTool.startSyncToSupabase();
+        }
+        function startSyncFromSupabase() {
+            migrationTool.startSyncFromSupabase();
         }
     </script>
 </body>
