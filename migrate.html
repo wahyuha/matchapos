@@ -353,22 +353,46 @@
             }
             
             async fetchAllFromSupabase() {
-                const url = `${this.SUPABASE_URL}/rest/v1/${this.table_name}?select=*&order=timestamp.desc`;
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': this.SUPABASE_KEY,
-                        'Authorization': `Bearer ${this.SUPABASE_KEY}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const limit = 1000;
+                const totalCalls = 2;
+                let allData = [];
                 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                for (let i = 0; i < totalCalls; i++) {
+                    const start = i * limit;
+                    const end = start + limit - 1;
+                    
+                    const url = `${this.SUPABASE_URL}/rest/v1/${this.table_name}?select=*&order=timestamp.desc`;
+                    
+                    console.log(`Making API call ${i + 1}/${totalCalls} - fetching records ${start} to ${end}`);
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'apikey': this.SUPABASE_KEY,
+                            'Authorization': `Bearer ${this.SUPABASE_KEY}`,
+                            'Content-Type': 'application/json',
+                            'Range': `${start}-${end}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status} on call ${i + 1}: ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    allData = allData.concat(data);
+                    
+                    console.log(`API call ${i + 1} completed - received ${data.length} records`);
+                    
+                    // Add a small delay between calls to be respectful to the API
+                    if (i < totalCalls - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
                 
-                return await response.json();
+                console.log(`Migration fetch completed - total records: ${allData.length}`);
+                return allData;
             }
             
             async startSyncFromSupabase() {
@@ -391,6 +415,8 @@
                     this.updateProgress(10);
                     
                     const supabaseOrders = await this.fetchAllFromSupabase();
+                    console.log(supabaseOrders.length);
+                    
                     if (!supabaseOrders || supabaseOrders.length === 0) {
                         throw new Error('No orders found in Supabase to sync');
                     }
@@ -431,7 +457,9 @@
                     for (let i = 0; i < convertedOrders.length; i += batchSize) {
                         const batch = convertedOrders.slice(i, i + batchSize);
                         const batchNumber = Math.floor(i / batchSize) + 1;
+                        
                         const totalBatches = Math.ceil(convertedOrders.length / batchSize);
+                        console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} orders)`);
                         
                         try {
                             this.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} orders)`, 'info');
