@@ -568,6 +568,28 @@
             min-height: var(--touch-target);
         }
 
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            justify-content: center;
+            display: none;
+        }
+        .tab-btn {
+            padding: 8px 12px;
+            border: 2px solid var(--border-subtle);
+            background: #F0F7F4;
+            color: var(--brand-800);
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: var(--brand-600);
+            color: #fff;
+            border-color: var(--brand-600);
+        }
+
         /* Mobile-optimized action buttons */
         .action-buttons { 
             display: grid; 
@@ -930,7 +952,7 @@
             align-items: flex-end; 
             height: 100px; 
             overflow-x: auto;
-            padding: 10px 0 0;
+            padding: 14px 0 0;
         }
 
         .time-bar { 
