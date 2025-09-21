@@ -2601,7 +2601,8 @@
                     headers: {
                         'apikey': SUPABASE_KEY,
                         'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
                     }
                 });
                 
@@ -2617,24 +2618,48 @@
                 const idbOrders = await idbGetAllOrders();
                 const idbOrderMap = new Map(idbOrders.map(order => [order.id, order]));
                 
-                // Find orders that are in Supabase but not in IndexedDB or newer in Supabase
-                const ordersToAdd = [];
+                // Track which orders we've processed to avoid duplicates
+                const processedOrderIds = new Set();
+                const ordersToUpsert = [];
+                
+                // Process Supabase orders
                 for (const supabaseOrder of supabaseOrders) {
-                    const idbOrder = idbOrderMap.get(supabaseOrder.id);
-                    if (!idbOrder || new Date(supabaseOrder.timestamp) > new Date(idbOrder.timestamp)) {
-                        ordersToAdd.push(supabaseOrder);
+                    if (processedOrderIds.has(supabaseOrder.id)) continue;
+                    
+                    const existingOrder = idbOrderMap.get(supabaseOrder.id);
+                    
+                    if (!existingOrder || new Date(supabaseOrder.updated_at || supabaseOrder.timestamp) > new Date(existingOrder.updated_at || existingOrder.timestamp)) {
+                        // Create a new order object, preserving any local fields that might not be in Supabase
+                        const mergedOrder = {
+                            ...(existingOrder || {}), // Keep existing fields
+                            ...supabaseOrder,         // Override with Supabase data
+                            synced: true,             // Mark as synced
+                            updated_at: supabaseOrder.updated_at || supabaseOrder.timestamp
+                        };
+                        
+                        // Make sure we have all required fields
+                        if (!mergedOrder.id) mergedOrder.id = supabaseOrder.id;
+                        if (!mergedOrder.timestamp) mergedOrder.timestamp = supabaseOrder.timestamp || new Date().toISOString();
+                        if (!mergedOrder.status) mergedOrder.status = 'completed'; // Default status
+                        
+                        ordersToUpsert.push(mergedOrder);
+                        processedOrderIds.add(supabaseOrder.id);
+                    } else {
+                        processedOrderIds.add(supabaseOrder.id);
                     }
                 }
                 
-                console.log(`Found ${ordersToAdd.length} orders to sync to IndexedDB`);
+                console.log(`Found ${ordersToUpsert.length} orders to upsert to IndexedDB`);
                 
-                // Add missing or updated orders to IndexedDB
-                for (const order of ordersToAdd) {
-                    await idbPutOrder(order);
+                // Batch process updates to IndexedDB
+                const batchSize = 10; // Process in batches to avoid overwhelming IndexedDB
+                for (let i = 0; i < ordersToUpsert.length; i += batchSize) {
+                    const batch = ordersToUpsert.slice(i, i + batchSize);
+                    await Promise.all(batch.map(order => idbPutOrder(order)));
                 }
                 
                 console.log('Sync with Supabase completed successfully');
-                return ordersToAdd.length;
+                return ordersToUpsert.length;
                 
             } catch (error) {
                 console.error('Error syncing with Supabase:', error);
