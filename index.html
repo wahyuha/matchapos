@@ -1299,6 +1299,7 @@
             <div class="big-actions-stack">
                 <button class="big-primary" onclick="showOrderForm()">+ Add New Order</button>
                 <button class="big-secondary" onclick="showStatsPage()">🤑 Tampilkan Penjualan</button>
+                <button class="big-secondary" onclick="showFinancePage()">💰 Tampilkan Keuangan</button>
             </div>
         </div>
 
@@ -1336,6 +1337,15 @@
             <button class="connect-btn" onclick="showQueue()">Kembali</button>
         </div>
         <div class="stats-content" id="statsContent"></div>
+    </div>
+
+    <!-- Finance Page -->
+    <div class="stats-panel hidden" id="financePanel">
+        <div class="stats-header">
+            <div style="font-weight:800">Laporan Keuangan</div>
+            <button class="connect-btn" onclick="showQueue()">Kembali</button>
+        </div>
+        <div class="stats-content" id="financeContent"></div>
     </div>
 
     <script>
@@ -1457,6 +1467,7 @@
         let dailyRangeDays = 7;
         let dailyMetric = 'omzet';
         let selectedBucketsDate = null;
+        let financeRangeDays = 7;
 
         // IndexedDB (orders persistence)
         const DB_NAME = 'MatchaPOS';
@@ -2075,8 +2086,21 @@
             document.getElementById('queuePanel').classList.add('hidden');
             document.getElementById('bigActionPanel').classList.add('hidden');
             document.getElementById('mainContainer').classList.add('hidden');
+            document.getElementById('financePanel').classList.add('hidden');
             document.getElementById('statsPanel').classList.remove('hidden');
             renderStatsPage();
+        }
+
+        function showFinancePage() {
+            uiMode = 'finance';
+            document.getElementById('orderPanel').classList.add('hidden');
+            document.getElementById('summaryPanel').classList.add('hidden');
+            document.getElementById('queuePanel').classList.add('hidden');
+            document.getElementById('bigActionPanel').classList.add('hidden');
+            document.getElementById('mainContainer').classList.add('hidden');
+            document.getElementById('statsPanel').classList.add('hidden');
+            document.getElementById('financePanel').classList.remove('hidden');
+            renderFinancePage();
         }
 
         function showQueue() {
@@ -2086,6 +2110,7 @@
             document.getElementById('queuePanel').classList.remove('hidden');
             document.getElementById('bigActionPanel').classList.remove('hidden');
             document.getElementById('statsPanel').classList.add('hidden');
+            document.getElementById('financePanel').classList.add('hidden');
             document.getElementById('mainContainer').classList.remove('hidden');
         }
 
@@ -2096,6 +2121,7 @@
             document.getElementById('queuePanel').classList.add('hidden');
             document.getElementById('bigActionPanel').classList.add('hidden');
             document.getElementById('statsPanel').classList.add('hidden');
+            document.getElementById('financePanel').classList.add('hidden');
             document.getElementById('mainContainer').classList.remove('hidden');
             
             paymentAmount = 0;
@@ -2269,6 +2295,277 @@
                 </div>`;
 
             content.innerHTML = html;
+        }
+
+        function renderFinancePage() {
+            const content = document.getElementById('financeContent');
+            let html = '';
+
+            // Get daily data for the selected range
+            const daily = aggregateDaily(financeRangeDays);
+            const totalOmzet = daily.reduce((sum, d) => sum + d.amount, 0);
+            const totalItems = daily.reduce((sum, d) => sum + d.items, 0);
+            
+            // Calculate commission data for each day
+            const dailyWithCommission = daily.map(d => {
+                const commission = d.items > 15 ? (d.items - 15) * 1000 : 0;
+                return { ...d, commission };
+            });
+            
+            const totalCommission = dailyWithCommission.reduce((sum, d) => sum + d.commission, 0);
+            
+            // Daily Omzet section with range tabs
+            html += `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <div style="font-weight:800; color:var(--brand-800);">📊 Omzet & Komisi Harian</div>
+                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
+                        ${[1,2,3,4,5,6,7,14,30].map(n => `<button onclick="setFinanceRange(${n})" class="tab-btn ${n===financeRangeDays?'active':''}" style="padding:6px 10px; font-size:0.85rem;">${n} hari</button>`).join('')}
+                    </div>
+                </div>
+                
+                <div style="background:#f8f9fa; border-radius:6px; padding:8px 12px; margin-bottom:12px; border-left:4px solid #17a2b8;">
+                    <div style="font-size:0.8rem; color:#495057; display:flex; align-items:center; gap:6px;">
+                        <span>ℹ️</span>
+                        <span><strong>Aturan Komisi:</strong> Rp1,000 per cup setelah cup ke-15 per hari</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:16px; overflow:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead>
+                            <tr style="text-align:left; color:var(--brand-800);">
+                                <th style="padding:8px 6px; border-bottom:2px solid var(--border-subtle);">Tanggal</th>
+                                <th style="padding:8px 6px; border-bottom:2px solid var(--border-subtle); text-align:right;">Omzet</th>
+                                <th style="padding:8px 6px; border-bottom:2px solid var(--border-subtle); text-align:right;">Items</th>
+                                <th style="padding:8px 6px; border-bottom:2px solid var(--border-subtle); text-align:right;">Orders</th>
+                                <th style="padding:8px 6px; border-bottom:2px solid var(--border-subtle); text-align:right;">Komisi Harian</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            // Show daily breakdown (reverse order - most recent first)
+            [...dailyWithCommission].reverse().forEach((d, idx) => {
+                const isToday = isSameDay(d.date, new Date());
+                const hasCommission = d.commission > 0;
+                const rowStyle = isToday ? 'background:var(--brand-100); font-weight:700;' : '';
+                const commissionStyle = hasCommission ? 'color:#28a745; font-weight:800;' : 'color:#6c757d;';
+                const commissionText = hasCommission ? formatRupiah(d.commission) : 'Rp0';
+                const commissionTitle = hasCommission ? 
+                    `${d.items} cups → (${d.items} - 15) × Rp1,000 = ${formatRupiah(d.commission)}` : 
+                    `${d.items} cups (≤15, tidak ada komisi)`;
+                
+                html += `
+                <tr style="${rowStyle}">
+                    <td style="padding:6px; border-bottom:1px dashed #eef2f7;">
+                        ${hasCommission ? '⭐ ' : ''}${d.label} ${isToday ? '(Hari ini)' : ''}
+                    </td>
+                    <td style="padding:6px; border-bottom:1px dashed #eef2f7; text-align:right; color:var(--brand-500); font-weight:800;">${formatRupiah(d.amount)}</td>
+                    <td style="padding:6px; border-bottom:1px dashed #eef2f7; text-align:right;">${d.items}</td>
+                    <td style="padding:6px; border-bottom:1px dashed #eef2f7; text-align:right;">${d.orders}</td>
+                    <td style="padding:6px; border-bottom:1px dashed #eef2f7; text-align:right; ${commissionStyle}" title="${commissionTitle}">${commissionText}</td>
+                </tr>`;
+            });
+            
+            // Total row
+            html += `
+                        <tr style="background:var(--brand-600); color:white; font-weight:800;">
+                            <td style="padding:10px 6px; font-size:14px;">TOTAL (${financeRangeDays} hari)</td>
+                            <td style="padding:10px 6px; text-align:right; font-size:14px;">${formatRupiah(totalOmzet)}</td>
+                            <td style="padding:10px 6px; text-align:right; font-size:14px;">${totalItems}</td>
+                            <td style="padding:10px 6px; text-align:right; font-size:14px;">${daily.reduce((sum, d) => sum + d.orders, 0)}</td>
+                            <td style="padding:10px 6px; text-align:right; font-size:14px;">${formatRupiah(totalCommission)}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+            // Employee salary calculation for the selected range
+            html += renderEmployeeSalarySection(financeRangeDays, totalCommission, dailyWithCommission);
+            
+            // Business insights for the selected range
+            const avgDailyOmzet = totalOmzet / financeRangeDays;
+            const avgDailyItems = totalItems / financeRangeDays;
+            
+            html += `
+            <div class="card">
+                <div style="font-weight:800; color:var(--brand-800); margin-bottom:12px;">📈 Insight Bisnis (${financeRangeDays} Hari)</div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                    <div style="background:var(--brand-100); border-radius:8px; padding:12px; text-align:center;">
+                        <div style="font-size:0.8rem; color:var(--ink-500);">Rata-rata Omzet/Hari</div>
+                        <div style="font-weight:800; color:var(--brand-600); font-size:1.1rem;">${formatRupiah(Math.round(avgDailyOmzet))}</div>
+                    </div>
+                    <div style="background:var(--brand-100); border-radius:8px; padding:12px; text-align:center;">
+                        <div style="font-size:0.8rem; color:var(--ink-500);">Rata-rata Items/Hari</div>
+                        <div style="font-weight:800; color:var(--brand-600); font-size:1.1rem;">${Math.round(avgDailyItems)} cups</div>
+                    </div>
+                </div>
+                
+                <div style="background:#f8fffe; border:2px solid #10b981; border-radius:8px; padding:12px;">
+                    <div style="font-weight:800; color:#065f46; margin-bottom:4px;">💡 Tips Bisnis</div>
+                    <div style="font-size:0.85rem; color:#047857; line-height:1.4;">
+                        ${totalItems < (financeRangeDays * 15) ? `Target ${financeRangeDays} hari belum optimal! Coba tingkatkan strategi penjualan.` : `Penjualan ${financeRangeDays} hari terakhir bagus! Pertahankan momentum ini.`}
+                    </div>
+                </div>
+            </div>`;
+
+            content.innerHTML = html;
+        }
+
+        function renderEmployeeSalarySection(rangeDays, rangeCommissionTotal = null, dailyCommissionData = null) {
+            // Calculate salary period - default starts from 27th of current/previous month
+            const now = new Date();
+            let payrollStartDate;
+            const payrollEndDate = 27;
+            
+            if (now.getDate() >= payrollEndDate) {
+                // Current month, start from 27th
+                payrollStartDate = new Date(now.getFullYear(), now.getMonth(), payrollEndDate);
+            } else {
+                // Previous month, start from 27th
+                payrollStartDate = new Date(now.getFullYear(), now.getMonth() - 1, payrollEndDate);
+            }
+            
+            // Get data for the payroll period (from 27th to now)
+            const payrollDays = Math.floor((now - payrollStartDate) / (24 * 60 * 60 * 1000)) + 1;
+            const payrollData = getDataForDateRange(payrollStartDate, now);
+            
+            // Also get data for selected range for comparison
+            const rangeData = aggregateDaily(rangeDays);
+            const rangeItems = rangeData.reduce((sum, d) => sum + d.items, 0);
+            const rangeDaysWorked = rangeDays; // Assuming employee works every day
+            
+            // Employee calculation constants
+            const dailySalary = 35000; // Rp35,000 per day
+            const commissionPerCup = 1000; // Rp1,000 per cup after 15th per day
+            const commissionThreshold = 15; // After 15th cup per day
+            
+            // Calculate for payroll period
+            let payrollCommission = 0;
+            let payrollBaseSalary = payrollDays * dailySalary;
+            
+            // Calculate commission for payroll period (daily basis)
+            payrollData.forEach(dayData => {
+                const dayItems = dayData.items || 0;
+                if (dayItems > commissionThreshold) {
+                    payrollCommission += (dayItems - commissionThreshold) * commissionPerCup;
+                }
+            });
+            
+            // Calculate for selected range - use provided data if available
+            let rangeCommission = rangeCommissionTotal || 0;
+            let rangeBaseSalary = rangeDaysWorked * dailySalary;
+            
+            // If no commission data provided, calculate it
+            if (rangeCommissionTotal === null) {
+                rangeData.forEach(dayData => {
+                    const dayItems = dayData.items || 0;
+                    if (dayItems > commissionThreshold) {
+                        rangeCommission += (dayItems - commissionThreshold) * commissionPerCup;
+                    }
+                });
+            }
+            
+            const payrollTotal = payrollBaseSalary + payrollCommission;
+            const rangeTotal = rangeBaseSalary + rangeCommission;
+            
+            const formatPayrollDate = (date) => {
+                const options = { day: '2-digit', month: 'short', year: 'numeric' };
+                return date.toLocaleDateString('id-ID', options);
+            };
+            
+            return `
+            <div class="card">
+                <div style="font-weight:800; color:var(--brand-800); margin-bottom:12px;">💼 Gaji Karyawan</div>
+                
+                <!-- Payroll Period (27th to now) -->
+                <div style="background:var(--brand-100); border-radius:8px; padding:12px; margin-bottom:16px; border:2px solid var(--brand-200);">
+                    <div style="font-weight:800; color:var(--brand-800); margin-bottom:8px;">Periode Gaji Aktif (${formatPayrollDate(payrollStartDate)} - ${formatPayrollDate(now)})</div>
+                    <div style="font-size:0.9rem; color:var(--ink-600); margin-bottom:12px;">Total: ${payrollDays} hari kerja | ${payrollData.reduce((sum, d) => sum + d.items, 0)} cups terjual</div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--border-subtle);">
+                        <div>
+                            <div style="font-weight:700; color:var(--brand-800);">Gaji Harian</div>
+                            <div style="font-size:0.8rem; color:var(--ink-500);">${payrollDays} hari × Rp35,000</div>
+                        </div>
+                        <div style="font-weight:800; color:var(--brand-500);">${formatRupiah(payrollBaseSalary)}</div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--border-subtle);">
+                        <div>
+                            <div style="font-weight:700; color:var(--brand-800);">Komisi Total</div>
+                            <div style="font-size:0.8rem; color:var(--ink-500);">Akumulasi komisi harian (lihat detail di tabel Omzet Harian)</div>
+                        </div>
+                        <div style="font-weight:800; color:var(--brand-500);">${formatRupiah(payrollCommission)}</div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:var(--brand-600); color:white; border-radius:8px; margin-top:8px;">
+                        <div>
+                            <div style="font-weight:800; font-size:1.1rem;">Total Gaji Periode</div>
+                            <div style="font-size:0.8rem; opacity:0.9;">Siap dibayar</div>
+                        </div>
+                        <div style="font-weight:900; font-size:1.2rem;">${formatRupiah(payrollTotal)}</div>
+                    </div>
+                </div>
+                
+                <!-- Selected Range Comparison -->
+                <div style="background:#f8f9fa; border-radius:8px; padding:12px; border:1px solid var(--border-subtle);">
+                    <div style="font-weight:800; color:var(--brand-800); margin-bottom:8px;">Perbandingan ${rangeDays} Hari Terakhir</div>
+                    <div style="font-size:0.9rem; color:var(--ink-600); margin-bottom:8px;">${rangeDaysWorked} hari kerja | ${rangeItems} cups terjual</div>
+                    ${dailyCommissionData ? `<div style="font-size:0.8rem; color:var(--ink-500); margin-bottom:12px;">✨ Komisi dihitung dari ${dailyCommissionData.filter(d => d.commission > 0).length} hari dengan penjualan >15 cups</div>` : ''}
+                    
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; text-align:center;">
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--ink-500);">Gaji Harian</div>
+                            <div style="font-weight:800; color:var(--brand-600);">${formatRupiah(rangeBaseSalary)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--ink-500);">Komisi</div>
+                            <div style="font-weight:800; color:var(--brand-600);">${formatRupiah(rangeCommission)}</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--ink-500);">Total</div>
+                            <div style="font-weight:800; color:var(--brand-600);">${formatRupiah(rangeTotal)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }
+        
+        function getDataForDateRange(startDate, endDate) {
+            const data = [];
+            const currentDate = new Date(startDate);
+            
+            while (currentDate <= endDate) {
+                const dayOrders = orderQueue.filter(o => {
+                    const orderDate = new Date(o.timestamp);
+                    return orderDate.getFullYear() === currentDate.getFullYear() &&
+                           orderDate.getMonth() === currentDate.getMonth() &&
+                           orderDate.getDate() === currentDate.getDate() &&
+                           o.status === 'completed';
+                });
+                
+                const dayAmount = dayOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+                const dayItems = dayOrders.reduce((sum, o) => sum + (o.items?.reduce((isum, item) => isum + item.quantity, 0) || 0), 0);
+                
+                data.push({
+                    date: new Date(currentDate),
+                    amount: dayAmount,
+                    items: dayItems,
+                    orders: dayOrders.length
+                });
+                
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+            
+            return data;
+        }
+        
+        function setFinanceRange(days) {
+            financeRangeDays = days;
+            renderFinancePage();
         }
 
         // Analytics helper functions
