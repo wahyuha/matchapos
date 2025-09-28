@@ -2418,7 +2418,7 @@
             // Calculate salary period - default starts from 27th of current/previous month
             const now = new Date();
             let payrollStartDate;
-            const payrollEndDate = 27;
+            const payrollEndDate = 29;
             
             if (now.getDate() >= payrollEndDate) {
                 // Current month, start from 27th
@@ -2478,7 +2478,7 @@
             
             return `
             <div class="card">
-                <div style="font-weight:800; color:var(--brand-800); margin-bottom:12px;">💼 Gaji Karyawan</div>
+                <div style="font-weight:800; color:var(--brand-800); margin-bottom:12px;">💼 Gaji</div>
                 
                 <!-- Payroll Period (27th to now) -->
                 <div style="background:var(--brand-100); border-radius:8px; padding:12px; margin-bottom:16px; border:2px solid var(--brand-200);">
