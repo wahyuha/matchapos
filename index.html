@@ -1320,6 +1320,9 @@
                         <div class="stat-label">Cancelled</div>
                     </div>
                 </div>
+                <div style="text-align: center; padding: var(--spacing-sm);">
+                    <button class="connect-btn" onclick="refreshFromSupabase(); renderQueue(); showNotification('Data refreshed')" style="font-size: 0.75rem;">🔄 Refresh Data</button>
+                </div>
             </div>
 
             <div class="queue-content" id="queueContent">
@@ -1400,56 +1403,94 @@
             }
         }
 
-        // Sync order to Supabase
-        async function syncOrderToSupabase(order) {
+
+        // Supabase CRUD Operations
+        async function supabaseGetAllOrders() {
+            if (!supabase) return [];
+            
+            try {
+                let allData = [];
+                let hasMore = true;
+                let page = 0;
+                const pageSize = 1000;
+                
+                while (hasMore) {
+                    const from = page * pageSize;
+                    const to = from + pageSize - 1;
+                    
+                    const { data, error } = await supabase
+                        .from(SUPABASE_TABLE)
+                        .select('*')
+                        .order('timestamp', { ascending: false })
+                        .range(from, to);
+                        
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        allData = allData.concat(data);
+                        hasMore = data.length === pageSize; // Continue if we got full page
+                        page++;
+                    } else {
+                        hasMore = false;
+                    }
+                }
+                
+                return allData;
+            } catch (error) {
+                console.error('Error fetching orders from Supabase:', error);
+                return [];
+            }
+        }
+
+        async function supabasePutOrder(order) {
             if (!supabase) return false;
             
             try {
-                // Map the order data to match your Supabase schema
                 const orderData = {
-                    order_id: order.id,  // Using order_id as per your table schema
+                    order_id: order.id,
                     timestamp: order.timestamp,
                     customer_name: order.customerName || '',
                     items: order.items,
                     subtotal: order.subtotal,
                     tax: order.tax || 0,
                     total: order.total,
-                    payment: order.payment || { amount: order.total, change: 0 }, // Store payment as JSONB
+                    payment: order.payment || { amount: order.total, change: 0 },
                     status: order.status,
                     notes: order.notes || '',
                     synced: true,
-                    created_at: new Date().toISOString()
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
                 };
 
                 const { data, error } = await supabase
                     .from(SUPABASE_TABLE)
-                    .upsert([orderData], { onConflict: 'order_id' }); // Using order_id as the conflict resolution key
+                    .upsert([orderData], { onConflict: 'order_id' });
 
                 if (error) throw error;
                 return true;
             } catch (error) {
-                console.error('Error syncing order to Supabase:', error);
+                console.error('Error saving order to Supabase:', error);
                 return false;
             }
         }
 
-        // Process any pending syncs
-        async function processPendingSyncs() {
+        async function supabaseUpdateOrderStatus(orderId, status) {
+            if (!supabase) return false;
+            
             try {
-                const orders = await idbGetAllOrders();
-                const pendingSyncs = orders.filter(o => o.status === 'completed' && !o.synced);
-                
-                for (const order of pendingSyncs) {
-                    const success = await syncOrderToSupabase(order);
-                    if (success) {
-                        order.synced = true;
-                        await idbPutOrder(order);
-                    } else {
-                        console.warn(`Failed to sync order ${order.id}, will retry later`);
-                    }
-                }
+                const { data, error } = await supabase
+                    .from(SUPABASE_TABLE)
+                    .update({
+                        status: status,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('order_id', orderId);
+
+                if (error) throw error;
+                return true;
             } catch (error) {
-                console.error('Error processing pending syncs:', error);
+                console.error('Error updating order status in Supabase:', error);
+                return false;
             }
         }
 
@@ -1469,105 +1510,25 @@
         let selectedBucketsDate = null;
         let financeRangeDays = 7;
 
-        // IndexedDB (orders persistence)
-        const DB_NAME = 'MatchaPOS';
-        const DB_VERSION = 1;
-        const STORE_ORDERS = 'orders';
-        const STORE_META = 'metadata';
-        let idbInstance = null;
-
-        function openIDB() {
-            if (idbInstance) return Promise.resolve(idbInstance);
-            return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, DB_VERSION);
-                req.onerror = () => reject(req.error);
-                req.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_ORDERS)) {
-                        const orderStore = db.createObjectStore(STORE_ORDERS, { keyPath: 'id' });
-                        orderStore.createIndex('timestamp', 'timestamp', { unique: false });
-                        orderStore.createIndex('status', 'status', { unique: false });
-                    }
-                    if (!db.objectStoreNames.contains(STORE_META)) {
-                        db.createObjectStore(STORE_META, { keyPath: 'key' });
-                    }
-                };
-                req.onsuccess = () => {
-                    idbInstance = req.result;
-                    resolve(idbInstance);
-                };
-            });
+        // Simple localStorage operations for offline fallback
+        function localStorageSetMeta(key, value) {
+            try {
+                localStorage.setItem(`matchapos_meta_${key}`, JSON.stringify(value));
+                return true;
+            } catch (error) {
+                console.error('Error saving to localStorage:', error);
+                return false;
+            }
         }
 
-        async function idbGetAllOrders() {
-            const db = await openIDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction([STORE_ORDERS], 'readonly');
-                const store = tx.objectStore(STORE_ORDERS);
-                const items = [];
-                const req = store.openCursor();
-                req.onerror = () => reject(req.error);
-                req.onsuccess = (e) => {
-                    const cursor = e.target.result;
-                    if (cursor) {
-                        items.push(cursor.value);
-                        cursor.continue();
-                    } else {
-                        items.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-                        resolve(items);
-                    }
-                };
-            });
-        }
-
-        async function idbPutOrder(order) {
-            const db = await openIDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction([STORE_ORDERS], 'readwrite');
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-                tx.objectStore(STORE_ORDERS).put(order);
-            });
-        }
-
-        async function idbUpdateOrderStatus(orderId, status) {
-            const db = await openIDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction([STORE_ORDERS], 'readwrite');
-                const store = tx.objectStore(STORE_ORDERS);
-                const getReq = store.get(orderId);
-                getReq.onerror = () => reject(getReq.error);
-                getReq.onsuccess = () => {
-                    const order = getReq.result;
-                    if (!order) { resolve(); return; }
-                    order.status = status;
-                    store.put(order);
-                };
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            });
-        }
-
-        async function idbSetMeta(key, value) {
-            const db = await openIDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction([STORE_META], 'readwrite');
-                const store = tx.objectStore(STORE_META);
-                store.put({ key, value });
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            });
-        }
-
-        async function idbGetMeta(key) {
-            const db = await openIDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction([STORE_META], 'readonly');
-                const store = tx.objectStore(STORE_META);
-                const req = store.get(key);
-                req.onerror = () => reject(req.error);
-                req.onsuccess = () => resolve(req.result ? req.result.value : undefined);
-            });
+        function localStorageGetMeta(key, defaultValue = null) {
+            try {
+                const item = localStorage.getItem(`matchapos_meta_${key}`);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (error) {
+                console.error('Error reading from localStorage:', error);
+                return defaultValue;
+            }
         }
 
         // Utility functions
@@ -1581,31 +1542,44 @@
             return `${dateStr}_${String(orderCounter++).padStart(3, '0')}`;
         }
 
-        async function saveToLocalStorage() {
+        async function saveCurrentOrderDraft() {
             try {
-                await idbSetMeta('current_order', currentOrder);
-                await idbSetMeta('order_counter', orderCounter);
+                localStorageSetMeta('current_order', currentOrder);
+                localStorageSetMeta('order_counter', orderCounter);
             } catch (e) {
-                console.error('Failed saving to IndexedDB', e);
+                console.error('Failed saving draft to localStorage', e);
             }
         }
 
-        async function loadFromLocalStorage() {
+        async function loadDataFromSupabase() {
             try {
-                await openIDB();
-                const [draft, counter, orders] = await Promise.all([
-                    idbGetMeta('current_order'),
-                    idbGetMeta('order_counter'),
-                    idbGetAllOrders()
-                ]);
-                currentOrder = draft || {};
-                orderCounter = typeof counter === 'number' ? counter : 1;
-                orderQueue = Array.isArray(orders) ? orders : [];
+                // Load draft from localStorage
+                currentOrder = localStorageGetMeta('current_order', {});
+                orderCounter = localStorageGetMeta('order_counter', 1);
+                
+                // Load orders from Supabase
+                const supabaseOrders = await supabaseGetAllOrders();
+                orderQueue = supabaseOrders.map(order => ({
+                    id: order.order_id || order.id,
+                    timestamp: order.timestamp,
+                    customerName: order.customer_name || '',
+                    items: order.items || [],
+                    subtotal: order.subtotal || 0,
+                    tax: order.tax || 0,
+                    total: order.total || 0,
+                    payment: order.payment || { amount: 0, change: 0 },
+                    status: order.status || 'completed',
+                    notes: order.notes || '',
+                    synced: true
+                }));
+                
+                console.log(`Loaded ${orderQueue.length} orders from Supabase`);
             } catch (e) {
-                console.error('Failed loading from IndexedDB', e);
-                currentOrder = {};
+                console.error('Failed loading from Supabase', e);
+                // Fallback to localStorage for current order only
+                currentOrder = localStorageGetMeta('current_order', {});
+                orderCounter = localStorageGetMeta('order_counter', 1);
                 orderQueue = [];
-                orderCounter = 1;
             }
         }
 
@@ -1777,7 +1751,7 @@
             }
 
             updateOrderSummary();
-            saveToLocalStorage();
+            saveCurrentOrderDraft();
         }
 
         function updateOrderSummary() {
@@ -1910,7 +1884,7 @@
                 if (card) card.classList.remove('selected');
             });
             updateOrderSummary();
-            saveToLocalStorage();
+            saveCurrentOrderDraft();
             showNotification('Order cleared');
         }
 
@@ -1993,8 +1967,14 @@
             };
 
             orderQueue.unshift(order);
-            try { await idbPutOrder(order); } catch (e) { console.error('IDB put order failed', e); }
-            saveToLocalStorage();
+            try {
+                await supabasePutOrder(order);
+                console.log('Order saved to Supabase successfully');
+            } catch (e) {
+                console.error('Failed to save order to Supabase', e);
+                showNotification('Order saved locally (will sync when online)', false);
+            }
+            saveCurrentOrderDraft();
             renderQueue();
 
             if (printEnabled) {
@@ -2053,8 +2033,13 @@
             const idx = orderQueue.findIndex(o => o.id === orderId);
             if (idx !== -1) {
                 orderQueue[idx].status = status;
-                try { await idbUpdateOrderStatus(orderId, status); } catch (e) { console.error('IDB status update failed', e); }
-                saveToLocalStorage();
+                try {
+                    await supabaseUpdateOrderStatus(orderId, status);
+                    console.log('Order status updated in Supabase');
+                } catch (e) {
+                    console.error('Failed to update order status in Supabase', e);
+                }
+                saveCurrentOrderDraft();
                 renderQueue();
             }
         }
@@ -2231,7 +2216,7 @@
                                 <button onclick="setDailyMetric('items')" class="tab-btn ${dailyMetric==='items'?'active':''}" style="border:none; border-radius:0; padding:6px 10px; font-size:0.85rem;">Items</button>
                             </div>
                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                ${[1,2,3,4,5,6,7,14,30].map(n => `<button onclick=\"setDailyRange(${n})\" class=\"tab-btn ${n===dailyRangeDays?'active':''}\" style=\"padding:6px 10px; font-size:0.85rem;\">${n} hari</button>`).join('')}
+                                ${[1,2,3,4,5,6,7,14,30,35].map(n => `<button onclick=\"setDailyRange(${n})\" class=\"tab-btn ${n===dailyRangeDays?'active':''}\" style=\"padding:6px 10px; font-size:0.85rem;\">${n} hari</button>`).join('')}
                             </div>
                         </div>
                     </div>
@@ -2320,7 +2305,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
                     <div style="font-weight:800; color:var(--brand-800);">📊 Omzet & Komisi Harian</div>
                     <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                        ${[1,2,3,4,5,6,7,14,30].map(n => `<button onclick="setFinanceRange(${n})" class="tab-btn ${n===financeRangeDays?'active':''}" style="padding:6px 10px; font-size:0.85rem;">${n} hari</button>`).join('')}
+                        ${[1,2,3,4,5,6,7,14,30,35].map(n => `<button onclick="setFinanceRange(${n})" class="tab-btn ${n===financeRangeDays?'active':''}" style="padding:6px 10px; font-size:0.85rem;">${n} hari</button>`).join('')}
                     </div>
                 </div>
                 
@@ -2837,27 +2822,21 @@
             };
             
             yes.onclick = async () => {
-                // First update the status to completed
+                // Update the status to completed in both local state and Supabase
                 await updateOrderStatus(orderId, 'completed');
                 
                 // Get the updated order
                 const order = orderQueue.find(o => o.id === orderId);
                 if (order) {
-                    // Try to sync with Supabase
-                    const syncSuccess = await syncOrderToSupabase(order);
+                    // Try to save the completed order to Supabase
+                    order.status = 'completed';
+                    const saveSuccess = await supabasePutOrder(order);
                     
-                    if (syncSuccess) {
-                        // Update sync status in IndexedDB
-                        order.synced = true;
-                        await idbPutOrder(order);
-                        showNotification('Order completed and synced');
+                    if (saveSuccess) {
+                        showNotification('Order completed and saved');
                     } else {
-                        // If sync fails, the order will be synced later
-                        showNotification('Order completed (will sync when online)', false, true);
+                        showNotification('Order completed (failed to save)', true);
                     }
-                    
-                    // Process any other pending syncs
-                    await processPendingSyncs();
                 }
                 
                 cleanup();
@@ -2877,114 +2856,42 @@
 
         const table_name = 'orders';
 
-        // Sync orders between Supabase and IndexedDB
-        async function syncWithSupabase() {
+        // Load fresh data from Supabase
+        async function refreshFromSupabase() {
             try {
-                console.log('Starting sync with Supabase...');
-                
-                // Get today's date in local time (UTC+7)
-                const today = new Date();
-                const localOffset = today.getTimezoneOffset() * 60000;
-                const targetTimezone = 7 * 60 * 60000; // UTC+7 in milliseconds
-                const localToday = new Date(today.getTime() - localOffset + targetTimezone);
-                
-                // Format dates for Supabase filter (YYYY-MM-DD format)
-                const todayStart = localToday.toISOString().split('T')[0] + 'T00:00:00.000Z';
-                const todayEnd = localToday.toISOString().split('T')[0] + 'T23:59:59.999Z';
-                
-                console.log('Fetching orders from Supabase...');
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/${table_name}?select=*&order=timestamp.desc&timestamp=gte.${todayStart}&timestamp=lte.${todayEnd}`, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=representation'
-                    }
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                const supabaseOrders = await response.json();
-                console.log(`Fetched ${supabaseOrders.length} orders from Supabase`);
-                
-                // Get orders from IndexedDB
-                const idbOrders = await idbGetAllOrders();
-                const idbOrderMap = new Map(idbOrders.map(order => [order.id, order]));
-                
-                // Track which orders we've processed to avoid duplicates
-                const processedOrderIds = new Set();
-                const ordersToUpsert = [];
-                
-                // Process Supabase orders
-                for (const supabaseOrder of supabaseOrders) {
-                    if (processedOrderIds.has(supabaseOrder.id)) continue;
-                    
-                    const existingOrder = idbOrderMap.get(supabaseOrder.id);
-                    
-                    if (!existingOrder || new Date(supabaseOrder.updated_at || supabaseOrder.timestamp) > new Date(existingOrder.updated_at || existingOrder.timestamp)) {
-                        // Create a new order object, preserving any local fields that might not be in Supabase
-                        const mergedOrder = {
-                            ...(existingOrder || {}), // Keep existing fields
-                            ...supabaseOrder,         // Override with Supabase data
-                            synced: true,             // Mark as synced
-                            updated_at: supabaseOrder.updated_at || supabaseOrder.timestamp
-                        };
-                        
-                        // Make sure we have all required fields
-                        if (!mergedOrder.id) mergedOrder.id = supabaseOrder.id;
-                        if (!mergedOrder.timestamp) mergedOrder.timestamp = supabaseOrder.timestamp || new Date().toISOString();
-                        if (!mergedOrder.status) mergedOrder.status = 'completed'; // Default status
-                        
-                        ordersToUpsert.push(mergedOrder);
-                        processedOrderIds.add(supabaseOrder.id);
-                    } else {
-                        processedOrderIds.add(supabaseOrder.id);
-                    }
-                }
-                
-                console.log(`Found ${ordersToUpsert.length} orders to upsert to IndexedDB`);
-                
-                // Batch process updates to IndexedDB
-                const batchSize = 10; // Process in batches to avoid overwhelming IndexedDB
-                for (let i = 0; i < ordersToUpsert.length; i += batchSize) {
-                    const batch = ordersToUpsert.slice(i, i + batchSize);
-                    await Promise.all(batch.map(order => idbPutOrder(order)));
-                }
-                
-                console.log('Sync with Supabase completed successfully');
-                return ordersToUpsert.length;
-                
+                console.log('Refreshing data from Supabase...');
+                await loadDataFromSupabase();
+                console.log('Data refresh completed');
+                return true;
             } catch (error) {
-                console.error('Error syncing with Supabase:', error);
-                throw error;
+                console.error('Error refreshing from Supabase:', error);
+                return false;
             }
         }
 
         async function init() {
             initializeProducts();
-            await loadFromLocalStorage();
+            loadSettings();
+            
+            // Initialize Supabase first
+            const supabaseReady = initSupabase();
+            
+            if (supabaseReady) {
+                // Load data from Supabase
+                await loadDataFromSupabase();
+            } else {
+                console.warn('Supabase not available, using localStorage fallback');
+                currentOrder = localStorageGetMeta('current_order', {});
+                orderCounter = localStorageGetMeta('order_counter', 1);
+                orderQueue = [];
+            }
+            
+            // Initialize UI
             renderQueue();
             updateOrderSummary();
             updateStatsActive();
             renderStatsPage();
-            
-            // Initialize Supabase
-            await initSupabase();
-            
-            // Sync with Supabase and then process any pending syncs
-            try {
-                await syncWithSupabase();
-                await processPendingSyncs();
-            } catch (error) {
-                console.error('Error during sync:', error);
-            }
-            
-            // Refresh the queue display after sync
-            renderQueue();
+            restoreProductSelections();
             
             // Show the queue by default
             showQueue();
