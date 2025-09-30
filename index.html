@@ -2254,7 +2254,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${[...daily].map((d,i)=>({d,i})).reverse().slice(0, Math.min(daily.length, 10)).map(({d,i}) => {
+                                ${[...daily].map((d,i)=>({d,i})).reverse().map(({d,i}) => {
                                     const avg = d.orders ? Math.round(d.amount / d.orders) : 0;
                                     const top = d.top || '-';
                                     return `
